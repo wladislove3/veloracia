@@ -362,32 +362,29 @@ export default function App() {
     const q = query(
       collection(db, 'radioMessages'),
       orderBy('createdAt', 'desc'),
-      limit(100) // Ограничиваем количество загружаемых сообщений
+      limit(100)
     );
     
     let isMounted = true;
     const unsub = onSnapshot(q, (snapshot) => {
       if (isMounted) {
         const nextMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('Received messages from Firestore:', nextMessages.length);
         setMessages(nextMessages);
+        
+        // Cache for faster initial load
         AsyncStorage.setItem(
           MESSAGES_CACHE_KEY,
           JSON.stringify(
             nextMessages.map((msg) => ({
               ...msg,
-              createdAt: msg?.createdAt?.seconds
-                ? msg.createdAt.seconds * 1000
-                : msg?.createdAt instanceof Date
-                  ? msg.createdAt.getTime()
-                  : msg?.createdAt || null,
+              createdAt: msg?.createdAt?.toMillis ? msg.createdAt.toMillis() : (msg?.createdAt?.seconds ? msg.createdAt.seconds * 1000 : msg?.createdAt)
             }))
           )
-        ).catch((error) => {
-          console.warn('Не удалось сохранить сообщения в кэш:', error);
-        });
+        ).catch(e => console.warn('Cache error:', e));
       }
     }, (error) => {
-      console.error('Ошибка при получении сообщений:', error);
+      console.error('Firestore Snapshot Error:', error);
     });
 
     return () => {
