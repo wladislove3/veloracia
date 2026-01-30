@@ -99,9 +99,14 @@ export default function App() {
 
         const cachedMessages = await AsyncStorage.getItem(MESSAGES_CACHE_KEY);
         if (cachedMessages) {
-          const parsedMessages = JSON.parse(cachedMessages);
-          if (Array.isArray(parsedMessages) && parsedMessages.length) {
-            setMessages(parsedMessages);
+          try {
+            const parsedMessages = JSON.parse(cachedMessages);
+            if (Array.isArray(parsedMessages) && parsedMessages.length) {
+              setMessages(parsedMessages);
+              console.log('Restored from cache:', parsedMessages.length);
+            }
+          } catch (e) {
+            console.warn('Failed to parse cached messages:', e);
           }
         }
       } catch (error) {
