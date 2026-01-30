@@ -358,19 +358,7 @@ export default function App() {
   const isSpeaking = currentSpeaker && currentSpeaker.userId === userId;
   const inQueue = queue.some(u => u.userId === userId) && !isSpeaking;
   
-  // Логирование состояния очереди
-  useEffect(() => {
-    console.log('Queue state:', {
-      queueLength: queue.length,
-      userId,
-      inQueue,
-      isSpeaking,
-      currentSpeaker: currentSpeaker?.userId,
-      queueUserIds: queue.map(u => u.userId)
-    });
-  }, [queue, userId, inQueue, isSpeaking, currentSpeaker]);
-
-  const [isClearing, setIsClearing] = useState(false);
+  const isClearingRef = useRef(false);
 
   // Сообщения из Firestore с ограничением и очисткой
   useEffect(() => {
@@ -388,7 +376,7 @@ export default function App() {
         
         // Если идет процесс очистки, не обновляем стейт, чтобы не мелькало
         // Но обновляем, если сообщений стало 0 (очистка завершилась)
-        if (!isClearing || nextMessages.length === 0) {
+        if (!isClearingRef.current || nextMessages.length === 0) {
            setMessages(nextMessages);
            
            // Cache for faster initial load
@@ -411,7 +399,7 @@ export default function App() {
       isMounted = false;
       unsub();
     };
-  }, [isClearing]); // Добавляем зависимость от isClearing
+  }, []);
 
   // Сохраняем масштаб/центр карты и радиус
   useEffect(() => {
@@ -537,7 +525,7 @@ export default function App() {
             style: 'destructive',
             onPress: async () => {
               try {
-                setIsClearing(true); // Блокируем обновления из snapshot
+                isClearingRef.current = true; // Блокируем обновления из snapshot
                 
                 // Очищаем локально сразу
                 setMessages([]);
@@ -557,7 +545,7 @@ export default function App() {
                 console.error('Ошибка при удалении сообщений:', e);
                 Alert.alert('Ошибка', 'Не удалось удалить некоторые сообщения.');
               } finally {
-                setIsClearing(false); // Разблокируем обновления
+                isClearingRef.current = false; // Разблокируем обновления
               }
             },
           },

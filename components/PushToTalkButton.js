@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Animated, View } from 'react-native';
+import { Pressable, Text, StyleSheet, Animated, View, Platform } from 'react-native';
 import { theme } from '../utils/theme';
 
 export default function PushToTalkButton({ isSpeaking, inQueue, onPressIn, onPressOut, disabled, remainingTime }) {
@@ -70,22 +70,23 @@ export default function PushToTalkButton({ isSpeaking, inQueue, onPressIn, onPre
   return (
     <Animated.View style={[styles.wrapper, { transform: [{ scale: scaleAnim }] }]}>
       <View style={[styles.halo, isSpeaking && styles.haloActive, disabled && styles.haloDisabled]} />
-      <TouchableOpacity
-        style={[
+      <Pressable
+        style={({ pressed }) => [
           styles.button,
           isSpeaking ? styles.speaking : inQueue ? styles.inQueue : styles.idle,
           disabled && styles.disabled,
-          Platform.OS === 'web' && styles.webButton
+          Platform.OS === 'web' && styles.webButton,
+          pressed && !disabled && { opacity: 0.85 }
         ]}
         onPressIn={!disabled ? onPressIn : undefined}
         onPressOut={!disabled ? onPressOut : undefined}
         delayLongPress={0}
-        activeOpacity={disabled ? 1 : 0.85}
+        pressRetentionOffset={{ top: 20, bottom: 20, left: 20, right: 20 }}
         {...(Platform.OS === 'web' ? { onContextMenu: (e) => e.preventDefault() } : {})}
       >
         <Text style={[styles.text, Platform.OS === 'web' && styles.webText]}>{title}</Text>
         <Text style={[styles.subtext, Platform.OS === 'web' && styles.webText]}>{subtitle}</Text>
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 }
