@@ -52,6 +52,7 @@ export default function App() {
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // {nickname, avatar}
   const [messages, setMessages] = useState([]);
+  const [hiddenMessageIds, setHiddenMessages] = useState([]); // ID сообщений, которые пользователь скрыл вручную
   const [playingId, setPlayingId] = useState(null);
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
@@ -82,6 +83,8 @@ export default function App() {
     };
   }, []);
 
+  const HIDDEN_MESSAGES_KEY = 'veloraz_hidden_messages';
+
   // Восстанавливаем карту и сообщения после перезагрузки
   useEffect(() => {
     (async () => {
@@ -95,6 +98,11 @@ export default function App() {
           if (typeof parsed?.radius === 'number') {
             setRadius(parsed.radius);
           }
+        }
+
+        const hidden = await AsyncStorage.getItem(HIDDEN_MESSAGES_KEY);
+        if (hidden) {
+          setHiddenMessages(JSON.parse(hidden));
         }
 
         const cachedMessages = await AsyncStorage.getItem(MESSAGES_CACHE_KEY);
@@ -442,6 +450,9 @@ export default function App() {
     }
 
     const filtered = messages.filter((msg) => {
+      // Не показываем, если пользователь очистил это сообщение
+      if (hiddenMessageIds.includes(msg.id)) return false;
+
       // Свои сообщения показываем всегда
       if (msg.userId === userId) return true;
       
@@ -511,16 +522,19 @@ export default function App() {
     try {
       Alert.alert(
         'Очистить чат?',
-        'Это удалит историю сообщений из вашего списка. Другие пользователи продолжат видеть сообщения в своих радиусах.',
+        'Это скроет текущие сообщения из вашего списка. Новые сообщения продолжат появляться.',
         [
           { text: 'Отмена', style: 'cancel' },
           {
             text: 'Очистить',
             style: 'destructive',
             onPress: async () => {
+              const allCurrentIds = messages.map(m => m.id);
+              const newHidden = [...new Set([...hiddenMessageIds, ...allCurrentIds])];
+              setHiddenMessages(newHidden);
+              await AsyncStorage.setItem(HIDDEN_MESSAGES_KEY, JSON.stringify(newHidden));
               await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
-              setMessages([]);
-              setVisibleMessages([]);
+              // setVisibleMessages обновится через useEffect
             },
           },
         ]
