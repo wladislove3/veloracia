@@ -74,15 +74,16 @@ export default function PushToTalkButton({ isSpeaking, inQueue, onPressIn, onPre
         style={[
           styles.button,
           isSpeaking ? styles.speaking : inQueue ? styles.inQueue : styles.idle,
-          disabled && styles.disabled
+          disabled && styles.disabled,
+          Platform.OS === 'web' && styles.webButton
         ]}
         onPressIn={!disabled ? onPressIn : undefined}
         onPressOut={!disabled ? onPressOut : undefined}
         delayLongPress={0}
         activeOpacity={disabled ? 1 : 0.85}
       >
-        <Text style={styles.text}>{title}</Text>
-        <Text style={styles.subtext}>{subtitle}</Text>
+        <Text style={[styles.text, Platform.OS === 'web' && styles.webText]}>{title}</Text>
+        <Text style={[styles.subtext, Platform.OS === 'web' && styles.webText]}>{subtitle}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -146,5 +147,16 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: '#9e9e9e',
     opacity: 0.8,
+  },
+  webButton: {
+    cursor: 'pointer',
+    touchAction: 'none',
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
+    WebkitTouchCallout: 'none',
+  },
+  webText: {
+    userSelect: 'none',
+    WebkitUserSelect: 'none',
   },
 });

@@ -158,7 +158,8 @@ export function usePushToTalk(userId, userProfile, location) {
             mediaChunksRef.current.push(event.data);
           }
         };
-        recorder.start();
+        // start(1000) requests data every second, ensuring we capture audio even if onstop fires early
+        recorder.start(1000);
         mediaRecorderRef.current = recorder;
         recordStartTime.current = Date.now();
         setIsRecordingWeb(true);

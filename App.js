@@ -469,7 +469,7 @@ export default function App() {
     });
 
     setVisibleMessages(filtered);
-  }, [messages, location, radius, userId]);
+  }, [messages, location, radius, userId, hiddenMessageIds]);
 
   // --- Вычисляем пользователей, которые говорили в эфир за последние 3 часа ---
   useEffect(() => {
@@ -662,14 +662,28 @@ export default function App() {
 
   // Push-to-Talk управление очередью и записью с защитой от ложных нажатий
   const pressTimeoutRef = useRef(null);
+  const isPressedRef = useRef(false);
   const recordingStartedRef = useRef(false);
+
   const handlePressIn = () => {
+    isPressedRef.current = true;
     recordingStartedRef.current = false;
+    
+    // Задержка перед стартом записи (защита от случайных нажатий)
     pressTimeoutRef.current = setTimeout(async () => {
+      // Если пользователь уже отпустил кнопку — не начинаем
+      if (!isPressedRef.current) return;
+
       try {
         if (typeof startRecording === 'function') {
           await startRecording();
           recordingStartedRef.current = true;
+          
+          // Проверка на случай, если отпустил кнопку ВО ВРЕМЯ startRecording
+          if (!isPressedRef.current) {
+             await handlePressOut();
+             return;
+          }
         } else {
           Alert.alert('Запись недоступна', 'Не удалось начать запись — проверьте доступ к микрофону или лимиты.');
           return;
@@ -689,24 +703,25 @@ export default function App() {
       }
     }, 100);
   };
+
   const handlePressOut = async () => {
+    isPressedRef.current = false;
+    
     if (pressTimeoutRef.current) {
       clearTimeout(pressTimeoutRef.current);
       pressTimeoutRef.current = null;
     }
+
     if (recordingStartedRef.current) {
       if (typeof stopRecording === 'function') {
         await stopRecording();
       } else {
         console.warn('stopRecording is not available');
-        Alert.alert('Запись недоступна', 'Не удалось остановить запись корректно.');
       }
       console.log('handlePressOut: вызываем leaveQueue');
       await leaveQueue();
-      console.log('handlePressOut: leaveQueue завершена');
       recordingStartedRef.current = false;
     }
-    // Если запись не стартовала — ничего не делаем
   };
 
   // Показываем экран входа если нет профиля
