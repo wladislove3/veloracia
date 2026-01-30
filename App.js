@@ -344,13 +344,26 @@ export default function App() {
   }, []);
 
   // Кнопка ручной центровки карты на текущей позиции
-  const handleCenterMap = () => {
-    if (location) {
+  const handleCenterMap = async () => {
+    try {
+      setMapLoading(true);
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Highest,
+        maximumAge: 0, // Force fresh location
+        timeout: 10000
+      });
+      
+      setLocation(loc.coords);
       setRegion((prev) => ({
         ...prev,
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
       }));
+    } catch (error) {
+      console.error('Error updating location:', error);
+      Alert.alert('Ошибка', 'Не удалось обновить местоположение. Проверьте GPS.');
+    } finally {
+      setMapLoading(false);
     }
   };
 
