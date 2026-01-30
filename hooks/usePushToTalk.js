@@ -195,13 +195,25 @@ export function usePushToTalk(userId, userProfile, location) {
         await new Promise(res => setTimeout(res, minRecordTime - elapsed));
       }
       
-      await new Promise((resolve) => {
-        recorder.onstop = resolve;
-        recorder.stop();
+      // Важно: захватываем чанки ДО остановки, если MediaRecorder ведет себя странно
+      const stopPromise = new Promise((resolve) => {
+        recorder.onstop = () => {
+          console.log('MediaRecorder stopped, chunks count:', mediaChunksRef.current.length);
+          resolve();
+        };
       });
+      
+      recorder.stop();
+      await stopPromise;
       setIsRecordingWeb(false);
 
+      if (mediaChunksRef.current.length === 0) {
+        console.error('No audio data captured');
+        return;
+      }
+
       const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+      console.log('Blob created, size:', blob.size);
       mediaChunksRef.current = [];
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
