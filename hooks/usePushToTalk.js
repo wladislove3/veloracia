@@ -6,18 +6,16 @@ import { db } from '../services/firebaseConfig';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 
-// userProfile — { nickname, avatar }
 export function usePushToTalk(userId, userProfile, location) {
-  // Рекордер из expo-audio с пониженным качеством для уменьшения размера
   const audioRecorder = useAudioRecorder({
     ...RecordingPresets.LOW_QUALITY,
     android: {
       ...RecordingPresets.LOW_QUALITY.android,
-      encodingBitRate: 32000, // Уменьшаем битрейт для Android
+      encodingBitRate: 32000,
     },
     ios: {
       ...RecordingPresets.LOW_QUALITY.ios,
-      bitRate: 32000, // Уменьшаем битрейт для iOS
+      bitRate: 32000,
     }
   });
   
@@ -25,25 +23,21 @@ export function usePushToTalk(userId, userProfile, location) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   
-  // Отслеживание количества сообщений за последний час
   const messageCountRef = useRef(0);
   const lastResetTimeRef = useRef(Date.now());
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
   const mediaChunksRef = useRef([]);
 
-  // Минимальная задержка между стартом и стопом записи (чтобы избежать ошибок stop)
-  const minRecordTime = 200; // мс
+  const minRecordTime = 200;
   const recordStartTime = useRef(0);
 
-  // Проверка и обновление состояния блокировки
   useEffect(() => {
     const checkMessageLimit = async () => {
       if (!userId) return;
       const now = Date.now();
       const oneHourAgo = now - 60 * 60 * 1000;
       
-      // Сброс счетчика если прошел час
       if (lastResetTimeRef.current < oneHourAgo) {
         messageCountRef.current = 0;
         lastResetTimeRef.current = now;
@@ -51,7 +45,6 @@ export function usePushToTalk(userId, userProfile, location) {
         setRemainingTime(0);
       }
       
-      // Запрос последних сообщений пользователя
       const hourAgoTimestamp = Timestamp.fromMillis(oneHourAgo);
 
       try {
@@ -115,12 +108,10 @@ export function usePushToTalk(userId, userProfile, location) {
     };
 
     checkMessageLimit();
-    const interval = setInterval(checkMessageLimit, 60000); // Проверяем каждую минуту
-    
+    const interval = setInterval(checkMessageLimit, 60000);
     return () => clearInterval(interval);
   }, [userId]);
 
-  // Разрешение на микрофон и настройка режима
   const [hasMicPermission, setHasMicPermission] = useState(false);
   const [isRecordingWeb, setIsRecordingWeb] = useState(false);
 
@@ -134,23 +125,6 @@ export function usePushToTalk(userId, userProfile, location) {
         const { status, canAskAgain } = await AudioModule.requestRecordingPermissionsAsync();
         
         if (status !== 'granted') {
-          const message = canAskAgain
-            ? 'Для записи сообщений необходим доступ к микрофону. Пожалуйста, разрешите доступ.'
-            : 'Доступ к микрофону запрещен. Пожалуйста, разрешите доступ в настройках устройства.';
-
-          Alert.alert(
-            'Требуется микрофон',
-            message,
-            canAskAgain
-              ? [
-                  { text: 'Отмена', style: 'cancel' },
-                  { text: 'Разрешить', onPress: () => AudioModule.requestRecordingPermissionsAsync() }
-                ]
-              : [
-                  { text: 'Открыть настройки', onPress: () => Linking.openSettings() },
-                  { text: 'Отмена', style: 'cancel' }
-                ]
-          );
           setHasMicPermission(false);
           return;
         }
@@ -159,20 +133,15 @@ export function usePushToTalk(userId, userProfile, location) {
         await AudioModule.setAudioModeAsync({
           playsInSilentMode: true,
           allowsRecording: true,
-          staysActiveInBackground: false, // Не продолжать запись в фоне
+          staysActiveInBackground: false,
         });
       } catch (e) {
         console.error('Ошибка инициализации аудио-модуля', e);
-        Alert.alert(
-          'Ошибка микрофона',
-          'Не удалось получить доступ к микрофону. Проверьте, что приложению разрешен доступ к микрофону в настройках устройства.'
-        );
         setHasMicPermission(false);
       }
     })();
   }, []);
 
-  // Начать запись
   const startRecording = async () => {
     if (Platform.OS === 'web') {
       try {
@@ -192,7 +161,6 @@ export function usePushToTalk(userId, userProfile, location) {
         recorder.start();
         mediaRecorderRef.current = recorder;
         recordStartTime.current = Date.now();
-        setHasMicPermission(true);
         setIsRecordingWeb(true);
       } catch (error) {
         console.error('Web recording error:', error);
@@ -202,10 +170,7 @@ export function usePushToTalk(userId, userProfile, location) {
     }
 
     if (!hasMicPermission) {
-      Alert.alert(
-        'Нет доступа к микрофону',
-        'Для записи сообщений необходим доступ к микрофону. Проверьте настройки приложения.'
-      );
+      Alert.alert('Нет доступа к микрофону', 'Разрешите доступ к микрофону в настройках.');
       return;
     }
 
@@ -215,160 +180,110 @@ export function usePushToTalk(userId, userProfile, location) {
       audioRecorder.record();
     } catch (e) {
       console.error('Ошибка при старте записи', e);
-      Alert.alert(
-        'Ошибка записи',
-        'Не удалось начать запись. Проверьте, что микрофон не используется другим приложением.'
-      );
     }
   };
 
-  // Остановить запись, загрузить в Storage, опубликовать в Firestore
-  const stopRecording = async () => {
-    if (Platform.OS === 'web') {
-      try {
-        const recorder = mediaRecorderRef.current;
-        if (!recorder || recorder.state === 'inactive') {
-          setIsRecordingWeb(false);
-          return;
-        }
-        const elapsed = Date.now() - recordStartTime.current;
-        if (elapsed < minRecordTime) {
-          await new Promise(res => setTimeout(res, minRecordTime - elapsed));
-        }
-        await new Promise((resolve) => {
-          recorder.onstop = resolve;
-          recorder.stop();
-        });
-        setIsRecordingWeb(false);
-        const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        mediaChunksRef.current = [];
-        if (mediaStreamRef.current) {
-          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-          mediaStreamRef.current = null;
-        }
-        if (blob.size > 700 * 1024) {
-          Alert.alert('Слишком длинное сообщение', 'Пожалуйста, запишите более короткое сообщение (максимум 30 секунд)');
-          return;
-        }
-        const base64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        const dataUrl = typeof base64 === 'string' ? base64 : '';
-        const base64Content = dataUrl.split(',')[1] || '';
-        if (base64Content.length > 900 * 1024) {
-          Alert.alert('Ошибка загрузки', 'Аудиосообщение слишком большое. Пожалуйста, запишите более короткое сообщение.');
-          return;
-        }
-        setLastAudioUrl(dataUrl);
-        const audioDoc = {
-          userId,
-          nickname: userProfile?.nickname || '',
-          avatar: userProfile?.avatar || '',
-          audioData: base64Content,
-          mimeType: blob.type || 'audio/webm',
-          size: base64Content.length,
-          location: location || null,
-          createdAt: serverTimestamp(),
-        };
-        await addDoc(collection(db, 'radioMessages'), audioDoc);
-      } catch (error) {
-        console.error('Ошибка при остановке записи (web)', error);
-      }
-      return;
-    }
-
+  const stopRecordingWeb = async () => {
     try {
-      // Ждём минимальное время, если запись только началась
+      const recorder = mediaRecorderRef.current;
+      if (!recorder || recorder.state === 'inactive') {
+        setIsRecordingWeb(false);
+        return;
+      }
       const elapsed = Date.now() - recordStartTime.current;
       if (elapsed < minRecordTime) {
         await new Promise(res => setTimeout(res, minRecordTime - elapsed));
       }
-      if (!audioRecorder.isRecording) {
-        console.warn('stopRecording: запись не идёт, выход');
+      
+      await new Promise((resolve) => {
+        recorder.onstop = resolve;
+        recorder.stop();
+      });
+      setIsRecordingWeb(false);
+
+      const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+      mediaChunksRef.current = [];
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      }
+
+      if (blob.size > 700 * 1024) {
+        Alert.alert('Слишком длинное сообщение', 'Запишите более короткое сообщение.');
         return;
       }
+
+      const base64Content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const audioDoc = {
+        userId,
+        nickname: userProfile?.nickname || '',
+        avatar: userProfile?.avatar || '',
+        audioData: base64Content,
+        mimeType: blob.type || 'audio/webm',
+        size: base64Content.length,
+        location: location ? {
+          latitude: location.latitude,
+          longitude: location.longitude
+        } : null,
+        createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db, 'radioMessages'), audioDoc);
+    } catch (error) {
+      console.error('Ошибка при остановке записи (web)', error);
+    }
+  };
+
+  const stopRecordingNative = async () => {
+    try {
+      const elapsed = Date.now() - recordStartTime.current;
+      if (elapsed < minRecordTime) {
+        await new Promise(res => setTimeout(res, minRecordTime - elapsed));
+      }
+      if (!audioRecorder.isRecording) return;
+      
       await audioRecorder.stop();
       const uri = audioRecorder.uri;
-      console.log('AUDIO URI:', uri);
-      if (!uri) {
-        console.error('Нет файла для загрузки!');
-        return;
-      }
+      if (!uri) return;
 
-      const fileInfo = await FileSystem.getInfoAsync(uri);
-      console.log('File exists:', fileInfo.exists, 'Size:', fileInfo.size);
-      if (!fileInfo.exists) {
-        console.error('Файл не найден по uri:', uri);
-        return;
-      }
-
-      // Проверяем размер файла (максимум 700KB для base64)
-      if (fileInfo.size > 700 * 1024) {
-        Alert.alert(
-          'Слишком длинное сообщение',
-          'Пожалуйста, запишите более короткое сообщение (максимум 30 секунд)'
-        );
-        return;
-      }
-
-      // Загружаем в Storage
-      try {
-        // Читаем файл как base64
-        const base64Content = await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64
-        });
-        console.log('Audio converted to base64, size:', base64Content.length);
-        
-        // Проверяем размер base64 данных (максимум 900KB для Firestore документа)
-        if (base64Content.length > 900 * 1024) {
-          Alert.alert(
-            'Ошибка загрузки',
-            'Аудиосообщение слишком большое. Пожалуйста, запишите более короткое сообщение.'
-          );
-          return;
-        }
-        
-        // Создаем data URL для воспроизведения
-        const dataUrl = `data:audio/m4a;base64,${base64Content}`;
-        setLastAudioUrl(dataUrl);
-        
-        // Сохраняем в Firestore
-        const audioDoc = {
-          userId,
-          nickname: userProfile?.nickname || '',
-          avatar: userProfile?.avatar || '',
-          audioData: base64Content, // base64 строка
-          mimeType: 'audio/m4a',
-          size: base64Content.length,
-          location: location || null,
-          createdAt: serverTimestamp(),
-        };
-        await addDoc(collection(db, 'radioMessages'), audioDoc);
-        console.log('Аудио сохранено в Firestore');
-          // сброс состояния не требуется — используем audioRecorder
-      } catch (e) {
-        console.error('Ошибка загрузки в Storage или Firestore', e?.code, e?.message);
-        try {
-          console.error('Full error:', JSON.stringify(e));
-        } catch (jsonErr) {
-          console.error('Could not stringify error', jsonErr);
-        }
-      }
+      const base64Content = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64
+      });
+      
+      const audioDoc = {
+        userId,
+        nickname: userProfile?.nickname || '',
+        avatar: userProfile?.avatar || '',
+        audioData: base64Content,
+        mimeType: 'audio/m4a',
+        size: base64Content.length,
+        location: location ? {
+          latitude: location.latitude,
+          longitude: location.longitude
+        } : null,
+        createdAt: serverTimestamp(),
+      };
+      await addDoc(collection(db, 'radioMessages'), audioDoc);
     } catch (e) {
-      console.error('Ошибка при остановке записи', e);
+      console.error('Ошибка при остановке записи (native)', e);
     }
   };
 
   return { 
     startRecording: (!isBlocked && hasMicPermission) ? startRecording : undefined,
-    stopRecording: (!isBlocked && hasMicPermission) ? stopRecording : undefined,
+    stopRecording: (!isBlocked && hasMicPermission) ? (Platform.OS === 'web' ? stopRecordingWeb : stopRecordingNative) : undefined,
     isRecording: Platform.OS === 'web' ? isRecordingWeb : (audioRecorder?.isRecording || false),
     lastAudioUrl,
     isBlocked: isBlocked || !hasMicPermission,
     remainingTime,
     hasMicPermission
   };
-} 
+}
