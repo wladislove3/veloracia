@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+{
+  "files": {
+    "include": [".env*", "**/.env*", "*.env"],
+    "exclude": []
+  }
+}

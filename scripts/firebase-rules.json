@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "radioQueue": {
+      ".read": true,
+      ".write": true
+    },
+    "radioMessages": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

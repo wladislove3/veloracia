@@ -13,17 +13,44 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Приложению необходим доступ к микрофону для записи голосовых сообщений",
+        "NSLocationWhenInUseUsageDescription": "Приложению необходим доступ к геолокации для отображения вашей позиции на карте"
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDUJh0giUrUAEChavSwzQqteVicyKMn2HM"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.wladislove.velorazdemo",
+      "versionCode": 1,
+      "minSdkVersion": 24,
+      "targetSdkVersion": 34,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMapsApiKey": "AIzaSyDUJh0giUrUAEChavSwzQqteVicyKMn2HM"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "37f07118-7e48-4628-87d5-35110b132497"
+      }
+    },
+    "plugins": [
+      "expo-location"
+    ]
   }
 }
