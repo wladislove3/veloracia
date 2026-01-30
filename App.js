@@ -416,6 +416,52 @@ export default function App() {
     });
   }, [region, radius]);
 
+  // --- Вычисляем видимые сообщения на основе радиуса ---
+  const [visibleMessages, setVisibleMessages] = useState([]);
+
+  // Функция для расчета расстояния (Haversine formula)
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // метров
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // в метрах
+  };
+
+  useEffect(() => {
+    if (!location) {
+      setVisibleMessages(messages); // Если локация неизвестна, показываем все (или можно скрыть)
+      return;
+    }
+
+    const filtered = messages.filter((msg) => {
+      // Свои сообщения показываем всегда
+      if (msg.userId === userId) return true;
+      
+      if (!msg.location || typeof msg.location.latitude !== 'number') return false;
+
+      const dist = getDistance(
+        location.latitude,
+        location.longitude,
+        msg.location.latitude,
+        msg.location.longitude
+      );
+      
+      // Показываем, если отправитель в нашем радиусе ИЛИ мы в радиусе отправителя
+      // Но по классике радио: мы слышим тех, кто попал в НАШ радиус
+      return dist <= radius;
+    });
+
+    setVisibleMessages(filtered);
+  }, [messages, location, radius, userId]);
+
   // --- Вычисляем пользователей, которые говорили в эфир за последние 3 часа ---
   useEffect(() => {
     const now = Date.now();
@@ -808,13 +854,13 @@ export default function App() {
         <View style={styles.audioListCard}>
           <View style={styles.audioListHeader}>
             <Text style={styles.audioListTitle}>Новые голоса</Text>
-            <Text style={styles.audioListCount}>{messages.length}</Text>
+            <Text style={styles.audioListCount}>{visibleMessages.length}</Text>
           </View>
-          {messages.length === 0 ? (
+          {visibleMessages.length === 0 ? (
             <Text style={styles.audioListEmpty}>Пока нет сообщений рядом.</Text>
           ) : (
             <FlatList
-              data={messages}
+              data={visibleMessages}
               keyExtractor={item => item.id}
               horizontal
               showsHorizontalScrollIndicator={false}
