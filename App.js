@@ -507,6 +507,29 @@ export default function App() {
     return () => clearInterval(intervalId);
   }, []);
 
+  const handleClearChat = async () => {
+    try {
+      Alert.alert(
+        'Очистить чат?',
+        'Это удалит историю сообщений из вашего списка. Другие пользователи продолжат видеть сообщения в своих радиусах.',
+        [
+          { text: 'Отмена', style: 'cancel' },
+          {
+            text: 'Очистить',
+            style: 'destructive',
+            onPress: async () => {
+              await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
+              setMessages([]);
+              setVisibleMessages([]);
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Ошибка при очистке чата:', error);
+    }
+  };
+
   // Воспроизведение аудио (безопасная реализация с очисткой и защитой от демонтирования)
   const playAudio = async (message, id) => {
     if (!message.audioData) {
@@ -884,6 +907,11 @@ export default function App() {
           )}
         </View>
       </Animated.View>
+      <View style={styles.clearChatWrapper}>
+        <TouchableOpacity onPress={handleClearChat} style={styles.clearChatButton}>
+          <Text style={styles.clearChatIcon}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.queueContainer}>
         <QueueIndicator
           currentSpeaker={currentSpeaker}
