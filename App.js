@@ -445,10 +445,7 @@ export default function App() {
       // Свои сообщения показываем всегда
       if (msg.userId === userId) return true;
       
-      if (!msg.location || typeof msg.location.latitude !== 'number') {
-        console.log('Message filtered out (no location):', msg.id);
-        return false;
-      }
+      if (!msg.location || typeof msg.location.latitude !== 'number') return false;
 
       const dist = getDistance(
         location.latitude,
@@ -456,8 +453,6 @@ export default function App() {
         msg.location.latitude,
         msg.location.longitude
       );
-      
-      console.log(`Distance to message ${msg.id} from ${msg.nickname || 'unknown'}:`, dist, 'Radius:', radius);
       
       return dist <= radius;
     });
