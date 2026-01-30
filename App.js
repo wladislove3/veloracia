@@ -15,7 +15,7 @@ import { useRadioQueue } from './hooks/useRadioQueue';
 import { usePushToTalk } from './hooks/usePushToTalk';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from './services/firebaseConfig';
-import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, limit, where, getDocs, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, limit, where, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import * as FileSystem from 'expo-file-system/legacy';
 import { AudioModule } from 'expo-audio';
 import { theme } from './utils/theme';
@@ -521,26 +521,33 @@ export default function App() {
   const handleClearChat = async () => {
     try {
       Alert.alert(
-        'Очистить чат?',
-        'Это скроет текущие сообщения из вашего списка. Новые сообщения продолжат появляться.',
+        'Удалить все сообщения?',
+        'Внимание! Это действие безвозвратно удалит все видимые сообщения из базы данных для ВСЕХ пользователей.',
         [
           { text: 'Отмена', style: 'cancel' },
           {
-            text: 'Очистить',
+            text: 'Удалить всё',
             style: 'destructive',
             onPress: async () => {
-              const allCurrentIds = messages.map(m => m.id);
-              const newHidden = [...new Set([...hiddenMessageIds, ...allCurrentIds])];
-              
-              // 1. Сначала обновляем состояние скрытых ID
-              setHiddenMessages(newHidden);
-              
-              // 2. Сразу очищаем видимые сообщения для мгновенного фидбека
-              setVisibleMessages([]);
-              
-              // 3. Сохраняем в кэш
-              await AsyncStorage.setItem(HIDDEN_MESSAGES_KEY, JSON.stringify(newHidden));
-              await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
+              try {
+                // Удаляем каждое сообщение из Firestore
+                const deletePromises = messages.map(msg => 
+                  deleteDoc(doc(db, 'radioMessages', msg.id))
+                );
+                await Promise.all(deletePromises);
+                
+                // Очищаем локальное состояние для мгновенного отклика
+                setMessages([]);
+                setVisibleMessages([]);
+                setHiddenMessages([]);
+                await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
+                await AsyncStorage.removeItem(HIDDEN_MESSAGES_KEY);
+                
+                Alert.alert('Готово', 'Все сообщения удалены из базы данных.');
+              } catch (e) {
+                console.error('Ошибка при удалении сообщений:', e);
+                Alert.alert('Ошибка', 'Не удалось удалить некоторые сообщения.');
+              }
             },
           },
         ]
