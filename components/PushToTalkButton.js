@@ -81,6 +81,7 @@ export default function PushToTalkButton({ isSpeaking, inQueue, onPressIn, onPre
         onPressOut={!disabled ? onPressOut : undefined}
         delayLongPress={0}
         activeOpacity={disabled ? 1 : 0.85}
+        {...(Platform.OS === 'web' ? { onContextMenu: (e) => e.preventDefault() } : {})}
       >
         <Text style={[styles.text, Platform.OS === 'web' && styles.webText]}>{title}</Text>
         <Text style={[styles.subtext, Platform.OS === 'web' && styles.webText]}>{subtitle}</Text>
