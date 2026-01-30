@@ -47,7 +47,7 @@ export default function App() {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
-  const [radius, setRadius] = useState(1000); // метров
+  const [radius, setRadius] = useState(20000); // 20 км по умолчанию
   const [location, setLocation] = useState(null);
   const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState(null); // {nickname, avatar}
@@ -823,9 +823,9 @@ export default function App() {
         <Text style={styles.sliderValue}>{(radius/1000).toFixed(2)} км</Text>
         <Slider
           style={styles.slider}
-          minimumValue={500}
-          maximumValue={20000}
-          step={100}
+          minimumValue={1000}
+          maximumValue={50000}
+          step={500}
           value={radius}
           onValueChange={setRadius}
           minimumTrackTintColor={theme.colors.primary}
