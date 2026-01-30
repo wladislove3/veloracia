@@ -531,10 +531,16 @@ export default function App() {
             onPress: async () => {
               const allCurrentIds = messages.map(m => m.id);
               const newHidden = [...new Set([...hiddenMessageIds, ...allCurrentIds])];
+              
+              // 1. Сначала обновляем состояние скрытых ID
               setHiddenMessages(newHidden);
+              
+              // 2. Сразу очищаем видимые сообщения для мгновенного фидбека
+              setVisibleMessages([]);
+              
+              // 3. Сохраняем в кэш
               await AsyncStorage.setItem(HIDDEN_MESSAGES_KEY, JSON.stringify(newHidden));
               await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
-              // setVisibleMessages обновится через useEffect
             },
           },
         ]
