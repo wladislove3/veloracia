@@ -370,6 +370,8 @@ export default function App() {
     });
   }, [queue, userId, inQueue, isSpeaking, currentSpeaker]);
 
+  const [isClearing, setIsClearing] = useState(false);
+
   // Сообщения из Firestore с ограничением и очисткой
   useEffect(() => {
     const q = query(
@@ -383,18 +385,23 @@ export default function App() {
       if (isMounted) {
         const nextMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log('Received messages from Firestore:', nextMessages.length);
-        setMessages(nextMessages);
         
-        // Cache for faster initial load
-        AsyncStorage.setItem(
-          MESSAGES_CACHE_KEY,
-          JSON.stringify(
-            nextMessages.map((msg) => ({
-              ...msg,
-              createdAt: msg?.createdAt?.toMillis ? msg.createdAt.toMillis() : (msg?.createdAt?.seconds ? msg.createdAt.seconds * 1000 : msg?.createdAt)
-            }))
-          )
-        ).catch(e => console.warn('Cache error:', e));
+        // Если идет процесс очистки, не обновляем стейт, чтобы не мелькало
+        // Но обновляем, если сообщений стало 0 (очистка завершилась)
+        if (!isClearing || nextMessages.length === 0) {
+           setMessages(nextMessages);
+           
+           // Cache for faster initial load
+           AsyncStorage.setItem(
+             MESSAGES_CACHE_KEY,
+             JSON.stringify(
+               nextMessages.map((msg) => ({
+                 ...msg,
+                 createdAt: msg?.createdAt?.toMillis ? msg.createdAt.toMillis() : (msg?.createdAt?.seconds ? msg.createdAt.seconds * 1000 : msg?.createdAt)
+               }))
+             )
+           ).catch(e => console.warn('Cache error:', e));
+        }
       }
     }, (error) => {
       console.error('Firestore Snapshot Error:', error);
@@ -404,7 +411,7 @@ export default function App() {
       isMounted = false;
       unsub();
     };
-  }, []);
+  }, [isClearing]); // Добавляем зависимость от isClearing
 
   // Сохраняем масштаб/центр карты и радиус
   useEffect(() => {
@@ -530,23 +537,27 @@ export default function App() {
             style: 'destructive',
             onPress: async () => {
               try {
+                setIsClearing(true); // Блокируем обновления из snapshot
+                
+                // Очищаем локально сразу
+                setMessages([]);
+                setVisibleMessages([]);
+                setHiddenMessages([]);
+                await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
+                await AsyncStorage.removeItem(HIDDEN_MESSAGES_KEY);
+
                 // Удаляем каждое сообщение из Firestore
                 const deletePromises = messages.map(msg => 
                   deleteDoc(doc(db, 'radioMessages', msg.id))
                 );
                 await Promise.all(deletePromises);
                 
-                // Очищаем локальное состояние для мгновенного отклика
-                setMessages([]);
-                setVisibleMessages([]);
-                setHiddenMessages([]);
-                await AsyncStorage.removeItem(MESSAGES_CACHE_KEY);
-                await AsyncStorage.removeItem(HIDDEN_MESSAGES_KEY);
-                
                 Alert.alert('Готово', 'Все сообщения удалены из базы данных.');
               } catch (e) {
                 console.error('Ошибка при удалении сообщений:', e);
                 Alert.alert('Ошибка', 'Не удалось удалить некоторые сообщения.');
+              } finally {
+                setIsClearing(false); // Разблокируем обновления
               }
             },
           },
