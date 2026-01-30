@@ -78,6 +78,9 @@ export default function PushToTalkButton({ isSpeaking, inQueue, onPressIn, onPre
         ]}
         onPressIn={!disabled ? onPressIn : undefined}
         onPressOut={!disabled ? onPressOut : undefined}
+        onMouseLeave={!disabled ? onPressOut : undefined}
+        onTouchEnd={!disabled ? onPressOut : undefined}
+        onTouchCancel={!disabled ? onPressOut : undefined}
         activeOpacity={disabled ? 1 : 0.85}
       >
         <Text style={styles.text}>{title}</Text>

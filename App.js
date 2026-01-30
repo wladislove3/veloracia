@@ -21,6 +21,8 @@ import { AudioModule } from 'expo-audio';
 import { theme } from './utils/theme';
 
 const { width } = Dimensions.get('window');
+const MAP_STATE_KEY = 'veloraz_map_state';
+const MESSAGES_CACHE_KEY = 'veloraz_messages_cache';
 
 function getRandomId() {
   // Try to use crypto-safe UUID when available, otherwise use Math.random fallback
@@ -78,6 +80,34 @@ export default function App() {
         try { currentPlayer.remove(); } catch (e) { /* ignore */ }
       }
     };
+  }, []);
+
+  // Восстанавливаем карту и сообщения после перезагрузки
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedMapState = await AsyncStorage.getItem(MAP_STATE_KEY);
+        if (savedMapState) {
+          const parsed = JSON.parse(savedMapState);
+          if (parsed?.region) {
+            setRegion((prev) => ({ ...prev, ...parsed.region }));
+          }
+          if (typeof parsed?.radius === 'number') {
+            setRadius(parsed.radius);
+          }
+        }
+
+        const cachedMessages = await AsyncStorage.getItem(MESSAGES_CACHE_KEY);
+        if (cachedMessages) {
+          const parsedMessages = JSON.parse(cachedMessages);
+          if (Array.isArray(parsedMessages) && parsedMessages.length) {
+            setMessages(parsedMessages);
+          }
+        }
+      } catch (error) {
+        console.warn('Не удалось восстановить состояние карты/сообщений:', error);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -236,12 +266,11 @@ export default function App() {
         });
         
         setLocation(loc.coords);
-        setRegion({
+        setRegion((prev) => ({
+          ...prev,
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        });
+        }));
         setMapError(false);
         setMapLoading(false);
 
@@ -339,7 +368,23 @@ export default function App() {
     let isMounted = true;
     const unsub = onSnapshot(q, (snapshot) => {
       if (isMounted) {
-        setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const nextMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setMessages(nextMessages);
+        AsyncStorage.setItem(
+          MESSAGES_CACHE_KEY,
+          JSON.stringify(
+            nextMessages.map((msg) => ({
+              ...msg,
+              createdAt: msg?.createdAt?.seconds
+                ? msg.createdAt.seconds * 1000
+                : msg?.createdAt instanceof Date
+                  ? msg.createdAt.getTime()
+                  : msg?.createdAt || null,
+            }))
+          )
+        ).catch((error) => {
+          console.warn('Не удалось сохранить сообщения в кэш:', error);
+        });
       }
     }, (error) => {
       console.error('Ошибка при получении сообщений:', error);
@@ -350,6 +395,24 @@ export default function App() {
       unsub();
     };
   }, []);
+
+  // Сохраняем масштаб/центр карты и радиус
+  useEffect(() => {
+    AsyncStorage.setItem(
+      MAP_STATE_KEY,
+      JSON.stringify({
+        region: {
+          latitude: region.latitude,
+          longitude: region.longitude,
+          latitudeDelta: region.latitudeDelta,
+          longitudeDelta: region.longitudeDelta,
+        },
+        radius,
+      })
+    ).catch((error) => {
+      console.warn('Не удалось сохранить состояние карты:', error);
+    });
+  }, [region, radius]);
 
   // --- Вычисляем пользователей, которые говорили в эфир за последние 3 часа ---
   useEffect(() => {

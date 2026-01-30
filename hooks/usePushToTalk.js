@@ -122,6 +122,7 @@ export function usePushToTalk(userId, userProfile, location) {
 
   // Разрешение на микрофон и настройка режима
   const [hasMicPermission, setHasMicPermission] = useState(false);
+  const [isRecordingWeb, setIsRecordingWeb] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -192,6 +193,7 @@ export function usePushToTalk(userId, userProfile, location) {
         mediaRecorderRef.current = recorder;
         recordStartTime.current = Date.now();
         setHasMicPermission(true);
+        setIsRecordingWeb(true);
       } catch (error) {
         console.error('Web recording error:', error);
         Alert.alert('Запись недоступна', 'Не удалось получить доступ к микрофону в браузере.');
@@ -226,6 +228,7 @@ export function usePushToTalk(userId, userProfile, location) {
       try {
         const recorder = mediaRecorderRef.current;
         if (!recorder || recorder.state === 'inactive') {
+          setIsRecordingWeb(false);
           return;
         }
         const elapsed = Date.now() - recordStartTime.current;
@@ -236,6 +239,7 @@ export function usePushToTalk(userId, userProfile, location) {
           recorder.onstop = resolve;
           recorder.stop();
         });
+        setIsRecordingWeb(false);
         const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
         mediaChunksRef.current = [];
         if (mediaStreamRef.current) {
@@ -361,7 +365,7 @@ export function usePushToTalk(userId, userProfile, location) {
   return { 
     startRecording: (!isBlocked && hasMicPermission) ? startRecording : undefined,
     stopRecording: (!isBlocked && hasMicPermission) ? stopRecording : undefined,
-    isRecording: audioRecorder?.isRecording || false,
+    isRecording: Platform.OS === 'web' ? isRecordingWeb : (audioRecorder?.isRecording || false),
     lastAudioUrl,
     isBlocked: isBlocked || !hasMicPermission,
     remainingTime,
