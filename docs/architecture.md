@@ -10,6 +10,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/features/location/platform` adapts browser geolocation and Expo Location to one location feature interface.
 - `src/features/radio/domain` owns radio limits and radius choices; `presentation` owns user-facing distance and time formatting.
 - `src/features/radio/domain/radioFeed.js` and `radioQueue.js` select retained, nearby feed items and derive queue state as pure rules. React hooks coordinate subscriptions and actions; they do not own feed-selection policy.
+- `src/features/radio/hooks` groups dashboard composition, feed and queue subscriptions, recording limits, and the push-to-talk session lifecycle.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
 - `src/shared/infrastructure/firebase` owns Firebase initialization, platform-specific auth, Firestore, and Storage clients.
 - `src/features/location/components/MapView.js` and `MapView.web.js` isolate native and web maps within the location feature.

@@ -41,13 +41,12 @@ export function useRadioFeed({ userId, location, radius }) {
     return () => clearInterval(interval);
   }, []);
 
-  const selection = { userId, location, radius, now };
   const visibleMessages = useMemo(
-    () => selectVisibleRadioMessages(messages, selection),
+    () => selectVisibleRadioMessages(messages, { userId, location, radius, now }),
     [location, messages, now, radius, userId],
   );
   const activeUsers = useMemo(
-    () => selectActiveRadioUsers(messages, selection),
+    () => selectActiveRadioUsers(messages, { location, radius, now }),
     [location, messages, now, radius],
   );
 
