@@ -4,7 +4,6 @@ import MapView, { Circle, Marker } from '../../location/components/MapView';
 import { palette } from '../../../shared/ui/tokens';
 import { RADIO_RADIUS_OPTIONS_METERS } from '../domain/radioPolicy';
 import { formatDistanceInMeters } from '../presentation/formatters';
-import LocationMapPlaceholder from './LocationMapPlaceholder';
 import { mapPanelStyles as styles } from './radioMapPanel.styles';
 
 function LocateButton({ isLoading, onPress }) {
@@ -70,6 +69,11 @@ export default function RadioMapPanel({
   isLoading,
   requestLocation,
   mapRegion,
+  onRegionChangeComplete,
+  zoomIn,
+  zoomOut,
+  canZoomIn,
+  canZoomOut,
   nearbyQueue,
   activeUsers,
   userId,
@@ -86,18 +90,22 @@ export default function RadioMapPanel({
 
   return (
     <View style={[styles.panel, !isWide && styles.panelMobile, isCompactMobile && styles.panelCompact]}>
-      {location ? (
-        <MapView style={styles.map} region={mapRegion} showsUserLocation={false} showsCompass={false}>
-          <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} />
-          <Marker coordinate={location} title="Вы" description="Вы здесь" />
-          {nearbyQueue.map((user) => (
-            <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
-          ))}
-          {activeUsersNotQueued.map((user) => (
-            <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
-          ))}
-        </MapView>
-      ) : <LocationMapPlaceholder />}
+      <MapView
+        style={styles.map}
+        region={mapRegion}
+        onRegionChangeComplete={onRegionChangeComplete}
+        showsUserLocation={false}
+        showsCompass={false}
+      >
+        {location ? <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} /> : null}
+        {location ? <Marker coordinate={location} title="Вы" description="Вы здесь" /> : null}
+        {nearbyQueue.map((user) => (
+          <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
+        ))}
+        {activeUsersNotQueued.map((user) => (
+          <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
+        ))}
+      </MapView>
 
       <View style={styles.topOverlay} pointerEvents="box-none">
         <View style={styles.titleCard}>
@@ -105,6 +113,30 @@ export default function RadioMapPanel({
           <Text style={styles.title}>{location ? 'Эфир поблизости' : isLoading ? 'Находим ваш район…' : 'Найдите свой эфир'}</Text>
         </View>
         <LocateButton isLoading={isLoading} onPress={requestLocation} />
+      </View>
+
+      <View style={styles.zoomControls}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Приблизить карту"
+          accessibilityState={{ disabled: !canZoomIn }}
+          disabled={!canZoomIn}
+          onPress={zoomIn}
+          style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed, !canZoomIn && styles.disabled]}
+        >
+          <Text style={styles.zoomButtonText}>+</Text>
+        </Pressable>
+        <View style={styles.zoomDivider} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Отдалить карту"
+          accessibilityState={{ disabled: !canZoomOut }}
+          disabled={!canZoomOut}
+          onPress={zoomOut}
+          style={({ pressed }) => [styles.zoomButton, pressed && styles.pressed, !canZoomOut && styles.disabled]}
+        >
+          <Text style={styles.zoomButtonText}>−</Text>
+        </Pressable>
       </View>
 
       <View style={styles.bottomOverlay} pointerEvents="box-none">

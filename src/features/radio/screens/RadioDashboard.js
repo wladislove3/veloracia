@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView, View, useWindowDimensions } from 'react-native';
 import RadioDashboardHeader from '../components/RadioDashboardHeader';
 import RadioMapPanel from '../components/RadioMapPanel';
@@ -18,7 +18,27 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const isWide = width >= 960;
   const isCompactMobile = !isWide && height < 720;
   const [radius, setRadius] = useState(DEFAULT_RADIO_RADIUS_METERS);
+  const [mapViewport, setMapViewport] = useState(null);
   const radio = useRadioDashboard(profile, radius);
+  const mapRegion = useMemo(() => {
+    return mapViewport || radio.mapRegion;
+  }, [mapViewport, radio.mapRegion]);
+  const zoomMap = useCallback((factor) => {
+    setMapViewport((current) => {
+      const region = current || radio.mapRegion;
+      const scale = (value) => Math.max(0.002, Math.min(90, value * factor));
+      return { ...region, latitudeDelta: scale(region.latitudeDelta), longitudeDelta: scale(region.longitudeDelta) };
+    });
+  }, [radio.mapRegion]);
+  const handleMapRegionChange = useCallback((region) => {
+    if (!Number.isFinite(region?.latitude) || !Number.isFinite(region?.longitude)
+      || !Number.isFinite(region?.latitudeDelta) || !Number.isFinite(region?.longitudeDelta)) return;
+    setMapViewport(region);
+  }, []);
+  const locateOnMap = useCallback(async () => {
+    setMapViewport(null);
+    await radio.requestLocation();
+  }, [radio.requestLocation]);
   const statusLabel = !radio.isFeedConnected
     ? 'Нет связи с эфиром'
     : radio.locationError
@@ -40,8 +60,13 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
         <RadioMapPanel
           location={radio.location}
           isLoading={radio.isLocationLoading}
-          requestLocation={radio.requestLocation}
-          mapRegion={radio.mapRegion}
+          requestLocation={locateOnMap}
+          mapRegion={mapRegion}
+          onRegionChangeComplete={handleMapRegionChange}
+          zoomIn={() => zoomMap(0.5)}
+          zoomOut={() => zoomMap(2)}
+          canZoomIn={mapRegion.latitudeDelta > 0.0021 && mapRegion.longitudeDelta > 0.0021}
+          canZoomOut={mapRegion.latitudeDelta < 89 && mapRegion.longitudeDelta < 89}
           nearbyQueue={radio.nearbyQueue}
           activeUsers={radio.activeUsers}
           userId={profile.userId}

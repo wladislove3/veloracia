@@ -24,28 +24,51 @@ function calculateZoom(region, size) {
   return Math.max(3, Math.min(18, Math.floor(Math.min(horizontalZoom, verticalZoom) - 0.15)));
 }
 
-const RegionSynchronizer = ({ region }) => {
+const RegionSynchronizer = ({ region, onRegionChangeComplete }) => {
   const map = useMap();
   useEffect(() => {
     if (!region) return;
+    const regionIsVisible = () => {
+      const center = map.getCenter();
+      const bounds = map.getBounds();
+      return Math.abs(center.lat - region.latitude) < 0.00001
+        && Math.abs(center.lng - region.longitude) < 0.00001
+        && Math.abs((bounds.getNorth() - bounds.getSouth()) - region.latitudeDelta) < 0.0001
+        && Math.abs((bounds.getEast() - bounds.getWest()) - region.longitudeDelta) < 0.0001;
+    };
     const fitRegion = () => {
+      if (regionIsVisible()) return;
       const zoom = calculateZoom(region, map.getSize());
       map.setView([region.latitude, region.longitude], zoom, { animate: true });
     };
+    const reportRegion = () => {
+      const center = map.getCenter();
+      const bounds = map.getBounds();
+      onRegionChangeComplete?.({
+        latitude: center.lat,
+        longitude: center.lng,
+        latitudeDelta: Math.max(bounds.getNorth() - bounds.getSouth(), 0.001),
+        longitudeDelta: Math.max(bounds.getEast() - bounds.getWest(), 0.001),
+      });
+    };
     fitRegion();
     map.on('resize', fitRegion);
-    return () => map.off('resize', fitRegion);
-  }, [map, region?.latitude, region?.longitude, region?.latitudeDelta, region?.longitudeDelta]);
+    map.on('moveend', reportRegion);
+    return () => {
+      map.off('resize', fitRegion);
+      map.off('moveend', reportRegion);
+    };
+  }, [map, onRegionChangeComplete, region?.latitude, region?.longitude, region?.latitudeDelta, region?.longitudeDelta]);
   return null;
 };
 
-const MapView = ({ region, style, children, onLoad, ...rest }) => {
+const MapView = ({ region, style, children, onLoad, onRegionChangeComplete, zoomControl = false, showsUserLocation, showsCompass, ...rest }) => {
   if (!region) return null;
   const center = [region.latitude, region.longitude];
 
   return (
-    <MapContainer center={center} zoom={11} style={style} {...rest} whenReady={onLoad}>
-      <RegionSynchronizer region={region} />
+    <MapContainer center={center} zoom={11} style={style} zoomControl={zoomControl} {...rest} whenReady={onLoad}>
+      <RegionSynchronizer region={region} onRegionChangeComplete={onRegionChangeComplete} />
       <TileLayer
         attribution='&copy; OpenStreetMap contributors &copy; CARTO'
         url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
