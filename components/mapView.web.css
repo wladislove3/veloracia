@@ -1,0 +1,52 @@
+.leaflet-container {
+  z-index: 1;
+  background: #17201c;
+  font-family: sans-serif;
+}
+
+.leaflet-pane {
+  z-index: 1;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 2;
+}
+
+.veloracia-marker {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 3px solid #111713;
+  border-radius: 50%;
+  background: #ceff57;
+  box-shadow: 0 0 0 5px rgba(206, 255, 87, 0.2), 0 5px 16px rgba(0, 0, 0, 0.35);
+  color: #14190e;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.veloracia-marker--self {
+  background: #f4f5ee;
+  box-shadow: 0 0 0 6px rgba(206, 255, 87, 0.24), 0 5px 16px rgba(0, 0, 0, 0.35);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #141919;
+  color: #f2f5eb;
+}
+
+.leaflet-popup-content {
+  margin: 10px 13px;
+}
+
+.leaflet-control-attribution {
+  background: rgba(13, 16, 16, 0.7) !important;
+  color: #9ca69a !important;
+}
+
+.leaflet-control-attribution a {
+  color: #ceff57 !important;
+}

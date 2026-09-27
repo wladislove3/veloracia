@@ -2,58 +2,55 @@ import React, { useEffect } from 'react';
 import { MapContainer, Marker as LeafletMarker, Popup, TileLayer, Circle as LeafletCircle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './mapView.web.css';
 
-const injectLeafletOverrides = () => {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById('leaflet-overrides')) return;
-  const style = document.createElement('style');
-  style.id = 'leaflet-overrides';
-  style.textContent = `
-    .leaflet-container { z-index: 1; background: #17201c; font-family: sans-serif; }
-    .leaflet-pane { z-index: 1; }
-    .leaflet-top, .leaflet-bottom { z-index: 2; }
-    .veloracia-marker { background: #ceff57; border: 3px solid #111713; border-radius: 50%; box-shadow: 0 0 0 5px rgba(206,255,87,.2), 0 5px 16px rgba(0,0,0,.35); color: #14190e; display: grid; font-size: 13px; font-weight: 900; height: 28px; place-items: center; width: 28px; }
-    .veloracia-marker--self { background: #f4f5ee; box-shadow: 0 0 0 6px rgba(206,255,87,.24), 0 5px 16px rgba(0,0,0,.35); }
-    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #141919; color: #f2f5eb; }
-    .leaflet-popup-content { margin: 10px 13px; }
-    .leaflet-control-attribution { background: rgba(13,16,16,.7) !important; color: #9ca69a !important; }
-    .leaflet-control-attribution a { color: #ceff57 !important; }
-  `;
-  document.head.appendChild(style);
-};
+const WEB_MERCATOR_LIMIT = 85.05112878;
+const TILE_SIZE = 256;
+
+function mercatorLatitude(latitude) {
+  const clamped = Math.max(-WEB_MERCATOR_LIMIT, Math.min(WEB_MERCATOR_LIMIT, latitude));
+  const radians = (clamped * Math.PI) / 180;
+  return (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + radians / 2));
+}
+
+function calculateZoom(region, size) {
+  if (!size.x || !size.y) return 11;
+  const north = region.latitude + region.latitudeDelta / 2;
+  const south = region.latitude - region.latitudeDelta / 2;
+  const projectedLatitudeDelta = Math.max(mercatorLatitude(north) - mercatorLatitude(south), 0.001);
+  const longitudeDelta = Math.max(region.longitudeDelta || region.latitudeDelta, 0.001);
+  const horizontalZoom = Math.log2((360 * size.x) / (TILE_SIZE * longitudeDelta));
+  const verticalZoom = Math.log2((360 * size.y) / (TILE_SIZE * projectedLatitudeDelta));
+  return Math.max(3, Math.min(18, Math.floor(Math.min(horizontalZoom, verticalZoom) - 0.15)));
+}
 
 const RegionSynchronizer = ({ region }) => {
   const map = useMap();
   useEffect(() => {
     if (!region) return;
-    const zoom = Math.max(3, Math.min(17, Math.round(12 - Math.log2(region.latitudeDelta || 0.01))));
-    map.setView([region.latitude, region.longitude], zoom, { animate: true });
-  }, [map, region?.latitude, region?.longitude, region?.latitudeDelta]);
+    const fitRegion = () => {
+      const zoom = calculateZoom(region, map.getSize());
+      map.setView([region.latitude, region.longitude], zoom, { animate: true });
+    };
+    fitRegion();
+    map.on('resize', fitRegion);
+    return () => map.off('resize', fitRegion);
+  }, [map, region?.latitude, region?.longitude, region?.latitudeDelta, region?.longitudeDelta]);
   return null;
 };
 
-const MapView = ({ region, style, children, onLoad, onError, ...rest }) => {
-  useEffect(() => {
-    injectLeafletOverrides();
-  }, []);
-
+const MapView = ({ region, style, children, onLoad, ...rest }) => {
   if (!region) return null;
   const center = [region.latitude, region.longitude];
-  const zoom = Math.max(3, Math.min(17, Math.round(12 - Math.log2(region.latitudeDelta || 0.01))));
 
   return (
-    <MapContainer center={center} zoom={zoom} style={style} {...rest} whenReady={onLoad}>
+    <MapContainer center={center} zoom={11} style={style} {...rest} whenReady={onLoad}>
       <RegionSynchronizer region={region} />
       <TileLayer
         attribution='&copy; OpenStreetMap contributors &copy; CARTO'
         url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         subdomains='abcd'
         errorTileUrl=''
-        eventHandlers={{
-          tileerror: (event) => {
-            console.warn('Tile load error', event?.error);
-          },
-        }}
       />
       {children}
     </MapContainer>
