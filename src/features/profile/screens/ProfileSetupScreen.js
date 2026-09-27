@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { palette, radii, shadows, spacing } from '../../../shared/ui/tokens';
 import { PROFILE_AVATARS } from '../domain/profile';
-import { getGuestSessionError } from '../presentation/guestSessionError';
 
 const legalDocuments = {
   privacy: 'https://github.com/wladislove3/veloracia/blob/main/PRIVACY_POLICY.md',
   terms: 'https://github.com/wladislove3/veloracia/blob/main/TERMS_OF_SERVICE.md',
 };
 
-export function ProfileSetup({ onSave }) {
+const waveformHeights = [18, 30, 22, 42, 27, 50, 24, 36, 19, 44, 27, 16, 34, 21, 40, 25];
+
+export function ProfileSetupScreen({ onSave }) {
   const { width, height } = useWindowDimensions();
   const isWide = width >= 820 && height >= 700;
   const [nickname, setNickname] = useState('');
@@ -35,10 +36,10 @@ export function ProfileSetup({ onSave }) {
   }
 
   return (
-    <SafeAreaView style={styles.profileScreen}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.profileKeyboard}>
-        <ScrollView contentContainerStyle={styles.profileScrollContent} keyboardShouldPersistTaps="handled">
-          <View style={[styles.profileCard, isWide && styles.profileCardWide]}>
+    <SafeAreaView style={styles.screen}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboard}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={[styles.card, isWide && styles.cardWide]}>
             {isWide ? (
               <View style={styles.heroPanel}>
                 <View style={styles.heroOrbitLarge} />
@@ -52,20 +53,18 @@ export function ProfileSetup({ onSave }) {
                   <Text style={styles.heroTitle}>Город звучит ближе.</Text>
                   <Text style={styles.heroCopy}>Услышать знакомую улицу. Подсказать дорогу. Поймать голоса тех, кто рядом.</Text>
                   <View style={styles.waveform} accessibilityElementsHidden>
-                    {[18, 30, 22, 42, 27, 50, 24, 36, 19, 44, 27, 16, 34, 21, 40, 25].map((bar, index) => (
-                      <View key={index} style={[styles.waveformBar, { height: bar }]} />
-                    ))}
+                    {waveformHeights.map((bar, index) => <View key={index} style={[styles.waveformBar, { height: bar }]} />)}
                   </View>
                 </View>
-                <View style={styles.heroFooter}><View style={styles.heroLiveDot} /><Text style={styles.heroFooterText}>ЛЮДИ ИЗ ВАШЕГО РАЙОНА</Text></View>
+                <View style={styles.heroFooter}><View style={styles.liveDot} /><Text style={styles.heroFooterText}>ЛЮДИ ИЗ ВАШЕГО РАЙОНА</Text></View>
               </View>
             ) : null}
 
             <View style={[styles.formPanel, isWide && styles.formPanelWide]}>
               {!isWide ? <View style={styles.brandMark}><Text style={styles.brandMarkText}>V</Text></View> : null}
               <Text style={styles.eyebrow}>{isWide ? 'ПЕРЕД ПЕРВЫМ ЭФИРОМ' : 'VELO · ЛОКАЛЬНЫЙ ЭФИР'}</Text>
-              <Text style={[styles.profileTitle, isWide && styles.profileTitleWide]}>{isWide ? 'Как вас звать?' : 'Город звучит ближе.'}</Text>
-              <Text style={styles.profileSubtitle}>{isWide ? 'Выберите позывной и знак — и присоединяйтесь к голосам рядом.' : 'Выберите имя — и слушайте голоса людей вокруг.'}</Text>
+              <Text style={[styles.title, isWide && styles.titleWide]}>{isWide ? 'Как вас звать?' : 'Город звучит ближе.'}</Text>
+              <Text style={styles.subtitle}>{isWide ? 'Выберите позывной и знак — и присоединяйтесь к голосам рядом.' : 'Выберите имя — и слушайте голоса людей вокруг.'}</Text>
               <Text style={styles.inputLabel}>ВАШ ПОЗЫВНОЙ</Text>
               <TextInput
                 accessibilityLabel="Ваш позывной"
@@ -122,85 +121,19 @@ export function ProfileSetup({ onSave }) {
   );
 }
 
-export function SetupRequired({ error, onRetry }) {
-  const details = getGuestSessionError(error);
-  return (
-    <SafeAreaView style={styles.profileScreen}>
-      <ScrollView contentContainerStyle={styles.setupScrollContent}>
-        <View style={styles.setupCard}>
-          <View style={styles.setupOrbitOne} />
-          <View style={styles.setupOrbitTwo} />
-          <View style={styles.setupBrand}>
-            <View style={[styles.brandMark, styles.setupBrandMark]}><Text style={styles.brandMarkText}>V</Text></View>
-            <View><Text style={styles.heroBrandName}>veloracia</Text><Text style={styles.heroBrandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
-            <View style={styles.setupSignal}><View style={styles.heroLiveDot} /><Text style={styles.setupSignalText}>СВЯЗЬ НЕ УСТАНОВЛЕНА</Text></View>
-          </View>
-          <View style={styles.setupWave} accessibilityElementsHidden>
-            {[12, 20, 31, 18, 39, 25, 46, 29, 17, 35, 22, 42, 14, 28, 19, 34, 12].map((bar, index) => (
-              <View key={index} style={[styles.waveformBar, styles.setupWaveBar, { height: bar }]} />
-            ))}
-          </View>
-          <Text style={styles.eyebrow}>НУЖНА НАСТРОЙКА</Text>
-          <Text style={styles.profileTitle}>{details.title}</Text>
-          <Text style={styles.setupMessage}>{details.message}</Text>
-          <View style={styles.setupInstruction}>
-            <Text style={styles.setupInstructionNumber}>01</Text>
-            <Text style={styles.setupInstructionText}>{details.instruction}</Text>
-          </View>
-          <Pressable onPress={onRetry} style={({ pressed }) => [styles.primaryButton, styles.setupRetry, pressed && styles.pressed]}>
-            <Text style={styles.primaryButtonText}>Попробовать снова <Text>↗</Text></Text>
-          </Pressable>
-          <Pressable accessibilityRole="link" onPress={() => Linking.openURL(details.settingsUrl).catch(() => undefined)} style={styles.setupSettings}>
-            <Text style={styles.setupSettingsText}>{details.settingsLabel}</Text>
-            <Text style={styles.setupSettingsArrow}>↗</Text>
-          </Pressable>
-          {details.code ? <Text selectable style={styles.setupErrorCode}>Код ошибки · {details.code}</Text> : null}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
-export function LoadingScreen() {
-  return (
-    <View style={styles.loadingScreen}>
-      <ActivityIndicator color={palette.lime} />
-      <Text style={styles.loadingLabel}>Включаем радио</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  brandMark: { width: 60, height: 60, borderRadius: 22, backgroundColor: palette.lime, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[7] },
-  profileScreen: { flex: 1, minHeight: Platform.OS === 'web' ? '100vh' : undefined, backgroundColor: palette.page },
-  profileKeyboard: { flex: 1 },
-  profileScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[5] },
-  setupScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[5] },
-  setupCard: { width: '100%', maxWidth: 520, padding: 32, borderRadius: radii.xl, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, overflow: 'hidden', ...shadows.panel },
-  setupOrbitOne: { position: 'absolute', width: 300, height: 300, borderRadius: 150, borderWidth: 1, borderColor: 'rgba(206,255,87,0.09)', right: -205, top: 45 },
-  setupOrbitTwo: { position: 'absolute', width: 220, height: 220, borderRadius: 110, borderWidth: 1, borderColor: 'rgba(206,255,87,0.07)', right: -165, top: 85 },
-  setupBrand: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 36 },
-  setupBrandMark: { width: 44, height: 44, borderRadius: 16, marginBottom: 0 },
-  setupSignal: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 9, paddingVertical: 7, borderRadius: radii.pill, backgroundColor: 'rgba(241,185,113,0.08)' },
-  setupSignalText: { color: palette.warning, fontSize: 8, fontWeight: '800', letterSpacing: 0.55 },
-  setupWave: { height: 38, flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 28 },
-  setupWaveBar: { width: 3, backgroundColor: 'rgba(206,255,87,0.42)' },
-  setupMessage: { color: palette.textMuted, fontSize: 14, lineHeight: 22, marginTop: 10, marginBottom: 22, maxWidth: 420 },
-  setupInstruction: { minHeight: 58, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: palette.surfaceRaised, borderWidth: 1, borderColor: palette.line, borderRadius: radii.sm },
-  setupInstructionNumber: { color: palette.lime, fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
-  setupInstructionText: { color: palette.text, flex: 1, fontSize: 12, lineHeight: 18, fontWeight: '700' },
-  setupRetry: { marginTop: 16 },
-  setupSettings: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 7, paddingVertical: 14 },
-  setupSettingsText: { color: palette.textMuted, fontSize: 12, fontWeight: '700' },
-  setupSettingsArrow: { color: palette.lime, fontSize: 13, fontWeight: '800' },
-  setupErrorCode: { color: palette.textFaint, fontSize: 10, textAlign: 'center', marginTop: 3 },
-  profileCard: { width: '100%', maxWidth: 430, padding: spacing[7], borderRadius: radii.xl, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, ...shadows.panel },
-  profileCardWide: { maxWidth: 980, padding: 0, flexDirection: 'row', overflow: 'hidden' },
+  screen: { flex: 1, minHeight: Platform.OS === 'web' ? '100vh' : undefined, backgroundColor: palette.page },
+  keyboard: { flex: 1 },
+  scrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[5] },
+  card: { width: '100%', maxWidth: 430, padding: spacing[7], borderRadius: radii.xl, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, ...shadows.panel },
+  cardWide: { maxWidth: 980, padding: 0, flexDirection: 'row', overflow: 'hidden' },
   heroPanel: { flex: 1, minHeight: 590, padding: 42, justifyContent: 'space-between', overflow: 'hidden', backgroundColor: '#1A211D', borderRightWidth: 1, borderRightColor: palette.line },
   heroOrbitLarge: { position: 'absolute', width: 430, height: 430, borderRadius: 215, borderWidth: 1, borderColor: 'rgba(206,255,87,0.12)', right: -205, top: 105 },
   heroOrbitSmall: { position: 'absolute', width: 310, height: 310, borderRadius: 155, borderWidth: 1, borderColor: 'rgba(206,255,87,0.11)', right: -145, top: 165 },
   heroBrand: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  brandMark: { width: 60, height: 60, borderRadius: 22, backgroundColor: palette.lime, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[7] },
   heroBrandMark: { marginBottom: 0 },
+  brandMarkText: { color: palette.ink, fontSize: 24, fontWeight: '900', fontStyle: 'italic' },
   heroBrandName: { color: palette.text, fontSize: 18, letterSpacing: -0.4, fontWeight: '900' },
   heroBrandCaption: { color: palette.textFaint, fontSize: 9, letterSpacing: 1.6, marginTop: 4, fontWeight: '700' },
   heroMessage: { maxWidth: 370, marginTop: 46, marginBottom: 46 },
@@ -210,14 +143,14 @@ const styles = StyleSheet.create({
   waveform: { height: 52, flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 34 },
   waveformBar: { width: 4, borderRadius: 2, backgroundColor: 'rgba(206,255,87,0.64)' },
   heroFooter: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  heroLiveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: palette.lime },
+  liveDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: palette.lime },
   heroFooterText: { color: palette.textFaint, fontSize: 9, fontWeight: '800', letterSpacing: 1.3 },
   formPanel: { width: '100%' },
   formPanelWide: { flex: 1, justifyContent: 'center', paddingHorizontal: 54, paddingVertical: 44 },
   eyebrow: { color: palette.lime, fontWeight: '800', letterSpacing: 1.7, fontSize: 10 },
-  profileTitle: { color: palette.text, fontSize: 32, lineHeight: 38, fontWeight: '900', letterSpacing: -1.4, marginTop: 10 },
-  profileTitleWide: { fontSize: 34, lineHeight: 40 },
-  profileSubtitle: { color: palette.textMuted, fontSize: 14, lineHeight: 21, marginTop: 10, marginBottom: 27 },
+  title: { color: palette.text, fontSize: 32, lineHeight: 38, fontWeight: '900', letterSpacing: -1.4, marginTop: 10 },
+  titleWide: { fontSize: 34, lineHeight: 40 },
+  subtitle: { color: palette.textMuted, fontSize: 14, lineHeight: 21, marginTop: 10, marginBottom: 27 },
   inputLabel: { color: palette.textFaint, fontSize: 9, fontWeight: '800', letterSpacing: 1.3, marginBottom: 8 },
   nameInput: { height: 50, paddingHorizontal: 14, borderRadius: radii.sm, borderWidth: 1, borderColor: palette.line, backgroundColor: palette.surfaceRaised, color: palette.text, marginBottom: 22, fontSize: 15 },
   avatarGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
@@ -233,8 +166,5 @@ const styles = StyleSheet.create({
   legalLink: { color: palette.textMuted, fontSize: 10, textDecorationLine: 'underline' },
   legalSeparator: { color: palette.textFaint, fontSize: 10 },
   errorText: { color: palette.warning, fontSize: 12, marginBottom: 8 },
-  brandMarkText: { color: palette.ink, fontSize: 24, fontWeight: '900', fontStyle: 'italic' },
   pressed: { opacity: 0.82 },
-  loadingScreen: { flex: 1, minHeight: Platform.OS === 'web' ? '100vh' : undefined, backgroundColor: palette.page, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingLabel: { color: palette.textMuted, fontSize: 12, fontWeight: '700' },
 });

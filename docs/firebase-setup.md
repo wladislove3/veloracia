@@ -1,6 +1,6 @@
 # Firebase setup
 
-Veloracia uses the Firebase Web SDK on web and native. The public client configuration for `veloracia-e93c7` is the default in `src/shared/infrastructure/firebase/firebaseApp.js`; `.env.local` can override it for local development, and Vercel environment values can override it for other deployments. Firebase client configuration is public by design. Protect application data with Firebase Security Rules and restrict the API key to Firebase APIs.
+Veloracia uses the Firebase Web SDK on web and native. The public client configuration for `veloracia-e93c7` is the default in `src/shared/infrastructure/firebase/firebaseApp.js`. Environment values are ignored unless `EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG=true` is set, which prevents stale Vercel variables from silently overriding the working project configuration. Firebase client configuration is public by design. Protect application data with Firebase Security Rules and restrict the API key to Firebase APIs.
 
 The repository's Firebase CLI default project is `veloracia-e93c7`.
 
