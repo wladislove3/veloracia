@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, SafeAreaView, Text, View, useWindowDimens
 import MapView, { Circle, Marker } from '../../../../components/MapView';
 import { styles } from '../radioDashboard.styles';
 import RadioSidebar, { RadioStatusPill } from '../components/RadioSidebar';
+import LocationMapPlaceholder from '../components/LocationMapPlaceholder';
 import { useRadioDashboard } from '../hooks/useRadioDashboard';
 
 const RADIUS_OPTIONS = [2_000, 5_000, 10_000, 20_000];
@@ -72,16 +73,18 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
 
       <View style={[styles.dashboardLayout, !isWide && styles.dashboardLayoutMobile, isCompactMobile && styles.dashboardLayoutCompact]}>
         <View style={[styles.mapPanel, !isWide && styles.mapPanelMobile, isCompactMobile && styles.mapPanelCompact]}>
-          <MapView style={styles.map} region={mapRegion} showsUserLocation={false} showsCompass={false}>
-            {location ? <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} /> : null}
-            {location ? <Marker coordinate={location} title="Вы" description="Вы здесь" /> : null}
-            {nearbyQueue.map((user) => (
-              <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
-            ))}
-            {activeUsers.filter((user) => user.userId !== profile.userId && !nearbyQueue.some((queued) => queued.userId === user.userId)).map((user) => (
-              <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
-            ))}
-          </MapView>
+          {location ? (
+            <MapView style={styles.map} region={mapRegion} showsUserLocation={false} showsCompass={false}>
+              <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} />
+              <Marker coordinate={location} title="Вы" description="Вы здесь" />
+              {nearbyQueue.map((user) => (
+                <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
+              ))}
+              {activeUsers.filter((user) => user.userId !== profile.userId && !nearbyQueue.some((queued) => queued.userId === user.userId)).map((user) => (
+                <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
+              ))}
+            </MapView>
+          ) : <LocationMapPlaceholder />}
 
           <View style={styles.mapTopOverlay} pointerEvents="box-none">
             <View style={styles.mapTitleCard}>
