@@ -27,7 +27,7 @@ npm run web
 Перед запуском создайте файл `.env.local` по образцу `.env.example`, включите **Anonymous** в Firebase Authentication и примените правила базы и хранилища:
 
 ```bash
-firebase deploy --only firestore:rules,storage
+firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
 
 Пошаговые инструкции и список переменных окружения находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Сначала проверьте проект Firebase: клиентские операции требуют авторизованного гостя.

@@ -15,7 +15,7 @@ The app uses Firebase Anonymous Authentication to assign a stable guest UID. In 
 ```bash
 firebase login
 firebase use <firebase-project-id>
-firebase deploy --only firestore:rules,storage
+firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
 
 The active Firebase project should match `EXPO_PUBLIC_FIREBASE_PROJECT_ID`. Firestore permits authenticated guests to read the public radio feed; each guest can create and delete only their own messages and queue entry. Storage audio is readable to authenticated guests and writable only under that guest's UID.
@@ -24,6 +24,6 @@ The rules deliberately remove unauthenticated public writes. Existing clients th
 
 ## Audio and retention
 
-New recordings are uploaded to `radioMessages/{uid}/{messageId}` in Firebase Storage. Firestore keeps only their metadata and the Storage path. The client reads at most 100 recent messages and filters visible messages by location and age. It does not delete shared records as part of normal startup.
+New recordings are uploaded to `radioMessages/{uid}/{messageId}` in Firebase Storage. Firestore keeps only their metadata and the Storage path. The client reads at most 100 recent messages and filters visible messages by location and age. The rate-limit lookup uses the `radioMessages(userId, createdAt)` composite index in `firestore.indexes.json`. Deploy it with the rules. The app does not delete shared records as part of normal startup.
 
 Legacy messages that stored base64 audio directly in Firestore remain playable while they are still returned by the feed. Do not run bulk deletion scripts against production data.
