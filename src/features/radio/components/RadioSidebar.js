@@ -69,7 +69,7 @@ export function RadioStatusPill({ children, tone }) {
 export default function RadioSidebar({
   isWide, profile, visibleMessages, currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked,
   remainingTime, recordingElapsed, playingId, onPlay, onPressIn, onPressOut, radius, onChangeProfile,
-  isConnected, error, isCompactMobile,
+  isFeedConnected, error, isCompactMobile,
 }) {
   return (
     <View style={[styles.sidebar, isWide ? styles.sidebarWide : styles.sidebarMobile, isCompactMobile && styles.sidebarCompact]}>
@@ -109,7 +109,7 @@ export default function RadioSidebar({
       {isWide ? <View style={styles.sidebarFooter}>
         <View style={styles.footerUser}>
           <View style={styles.footerAvatar}><Text>{profile.avatar}</Text></View>
-          <View style={styles.footerUserCopy}><Text numberOfLines={1} style={styles.footerUserName}>{profile.nickname}</Text><Text style={styles.footerStatus}>{isConnected ? 'На связи' : 'Нет подключения'}</Text></View>
+          <View style={styles.footerUserCopy}><Text numberOfLines={1} style={styles.footerUserName}>{profile.nickname}</Text><Text style={styles.footerStatus}>{isFeedConnected ? 'Эфир на связи' : 'Нет связи с эфиром'}</Text></View>
         </View>
         <Pressable onPress={onChangeProfile} accessibilityRole="button" accessibilityLabel="Сменить профиль" style={styles.profileMenuButton}>
           <Text style={styles.profileMenuButtonText}>···</Text>

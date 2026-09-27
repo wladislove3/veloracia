@@ -37,8 +37,13 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const {
     location, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
     currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
-    playingId, playMessage, handlePressIn, handlePressOut, screenError, isConnected,
+    playingId, playMessage, handlePressIn, handlePressOut, screenError, isFeedConnected,
   } = radio;
+  const statusLabel = !isFeedConnected
+    ? 'Нет связи с эфиром'
+    : location
+      ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом`
+      : 'Геопозиция выключена';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -48,8 +53,8 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           <View><Text style={styles.brandName}>veloracia</Text><Text style={styles.brandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
         </View>
         <View style={styles.topBarRight}>
-          {width >= 520 ? <RadioStatusPill tone={location ? 'live' : 'warning'}>
-            {location ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом` : 'Геопозиция выключена'}
+          {width >= 520 ? <RadioStatusPill tone={isFeedConnected && location ? 'live' : 'warning'}>
+            {statusLabel}
           </RadioStatusPill> : null}
           <Pressable onPress={onChangeProfile} style={styles.headerAvatar} accessibilityRole="button" accessibilityLabel="Изменить профиль">
             <Text>{profile.avatar}</Text>
@@ -132,7 +137,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           currentSpeaker={currentSpeaker}
           error={screenError}
           isBlocked={isBlocked}
-          isConnected={isConnected}
+          isFeedConnected={isFeedConnected}
           isInQueue={isInQueue}
           isWaiting={isWaiting}
           isRecording={isRecording}
