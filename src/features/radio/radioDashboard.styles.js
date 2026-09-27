@@ -103,6 +103,8 @@ export const styles = StyleSheet.create({
   talkButtonIcon: { color: palette.ink, fontSize: 27, fontWeight: '900' },
   talkTitle: { color: palette.text, fontSize: 13, fontWeight: '800', marginTop: 9 },
   talkHint: { color: palette.textFaint, fontSize: 10, marginTop: 3 },
+  recordingProgressTrack: { width: 148, height: 3, overflow: 'hidden', borderRadius: 2, backgroundColor: 'rgba(255,110,100,0.18)', marginTop: 9 },
+  recordingProgressFill: { height: '100%', borderRadius: 2, backgroundColor: palette.record },
   sidebarFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTopWidth: 1, borderTopColor: palette.line },
   footerUser: { flexDirection: 'row', alignItems: 'center', gap: 9, flex: 1 },
   footerAvatar: { width: 34, height: 34, borderRadius: 12, backgroundColor: palette.surfaceRaised, alignItems: 'center', justifyContent: 'center', fontSize: 17 },

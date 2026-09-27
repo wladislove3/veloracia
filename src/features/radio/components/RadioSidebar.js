@@ -2,6 +2,7 @@ import React from 'react';
 import { FlatList, Platform, Pressable, Text, View } from 'react-native';
 import { styles } from '../radioDashboard.styles';
 import { formatDistanceInMeters, formatRecordingDuration, formatRelativeMessageAge } from '../presentation/formatters';
+import { MAX_RECORDING_DURATION_MS } from '../domain/radioPolicy';
 
 function StatusPill({ children, tone = 'neutral' }) {
   return (
@@ -52,6 +53,11 @@ function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, r
       </Pressable>
       <Text style={styles.talkTitle}>{isRecording ? `В эфире · ${formatRecordingDuration(recordingElapsed)}` : isBlocked ? 'Небольшая пауза' : isWaiting ? 'Вы следующие' : 'Сказать рядом'}</Text>
       <Text style={styles.talkHint}>{isRecording ? 'Отпустите, чтобы отправить · до 30 секунд' : isWaiting ? 'Запись начнётся автоматически' : lockLabel}</Text>
+      {isRecording ? (
+        <View accessibilityElementsHidden style={styles.recordingProgressTrack}>
+          <View style={[styles.recordingProgressFill, { width: `${Math.min(100, (recordingElapsed / MAX_RECORDING_DURATION_MS) * 100)}%` }]} />
+        </View>
+      ) : null}
     </View>
   );
 }
