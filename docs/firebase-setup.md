@@ -2,6 +2,8 @@
 
 Veloracia uses the Firebase Web SDK on web and native. Keep Firebase client settings in local environment files or Vercel project settings. `.env.local` is ignored by Git.
 
+The repository's Firebase CLI default project is `veloracia-e93c7`.
+
 ## Required configuration
 
 Copy `.env.example` to `.env.local` and provide the web app values from Firebase Console → Project settings → General → Your apps. Set the same `EXPO_PUBLIC_FIREBASE_*` values in Vercel for Preview and Production.
@@ -14,8 +16,7 @@ The app uses Firebase Anonymous Authentication to assign a stable guest UID. In 
 
 ```bash
 firebase login
-firebase use <firebase-project-id>
-firebase deploy --only firestore:rules,firestore:indexes,storage
+firebase deploy --project default --only firestore:rules,firestore:indexes,storage
 ```
 
 The active Firebase project should match `EXPO_PUBLIC_FIREBASE_PROJECT_ID`. Firestore permits authenticated guests to read the public radio feed; each guest can create and delete only their own messages and queue entry. Storage audio is readable to authenticated guests and writable only under that guest's UID.

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { countMessagesSince, publishVoiceMessage } from './data/firestore/radioMessageRepository';
-import { useAudioCapture } from './audio/useAudioCapture';
+import { countMessagesSince, publishVoiceMessage } from '../data/firestore/radioMessageRepository';
+import { useAudioCapture } from '../audio/useAudioCapture';
 import {
   MAX_MESSAGES_PER_HOUR,
   MAX_RECORDING_AUDIO_BYTES,
   MAX_RECORDING_DURATION_MS,
   MIN_RECORDING_DURATION_MS,
   RADIO_MESSAGE_RATE_WINDOW_MS,
-} from './domain/radioPolicy';
+} from '../domain/radioPolicy';
 
 export function usePushToTalk({ userId, profile, location }) {
   const [isBlocked, setIsBlocked] = useState(false);

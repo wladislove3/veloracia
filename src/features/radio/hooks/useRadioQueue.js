@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { joinRadioQueue, leaveRadioQueue, subscribeToQueue } from './data/firestore/radioQueueRepository';
-import { RADIO_QUEUE_LIFETIME_MS } from './domain/radioPolicy';
-import { getRadioQueuePosition, selectCurrentRadioQueue } from './domain/radioQueue';
+import { joinRadioQueue, leaveRadioQueue, subscribeToQueue } from '../data/firestore/radioQueueRepository';
+import { RADIO_QUEUE_LIFETIME_MS } from '../domain/radioPolicy';
+import { getRadioQueuePosition, selectCurrentRadioQueue } from '../domain/radioQueue';
 
 export function useRadioQueue({ userId, profile, location }) {
   const [users, setUsers] = useState([]);

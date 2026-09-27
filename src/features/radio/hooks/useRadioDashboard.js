@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveLocation } from '../../location/useLiveLocation';
 import { useAudioPlayback } from '../audio/useAudioPlayback';
-import { usePushToTalk } from '../usePushToTalk';
-import { useRadioFeed } from '../useRadioFeed';
-import { useRadioQueue } from '../useRadioQueue';
+import { usePushToTalk } from './usePushToTalk';
+import { useRadioFeed } from './useRadioFeed';
+import { useRadioQueue } from './useRadioQueue';
 import { selectNearbyRadioQueue } from '../domain/radioQueue';
 
 export function useRadioDashboard(profile, radius) {
