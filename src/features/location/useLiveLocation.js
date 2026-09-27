@@ -28,7 +28,10 @@ export function useLiveLocation() {
     let stopWatching = () => {};
 
     Promise.resolve()
-      .then(() => watchLocation(setLocation))
+      .then(() => watchLocation((nextLocation) => {
+        setLocation(nextLocation);
+        setError(null);
+      }))
       .then((unsubscribe) => {
         if (active) stopWatching = unsubscribe;
         else unsubscribe();

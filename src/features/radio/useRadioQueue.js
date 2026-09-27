@@ -11,7 +11,10 @@ export function useRadioQueue({ userId, profile, location }) {
 
   useEffect(() => {
     const unsubscribe = subscribeToQueue(
-      setUsers,
+      (nextUsers) => {
+        setUsers(nextUsers);
+        setError(null);
+      },
       (nextError) => setError(nextError)
     );
     return unsubscribe;

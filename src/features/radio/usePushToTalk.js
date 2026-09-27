@@ -12,6 +12,7 @@ export function usePushToTalk({ userId, profile, location }) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   const [error, setError] = useState(null);
+  const [rateLimitError, setRateLimitError] = useState(null);
   const startTimeRef = useRef(0);
   const stopTimerRef = useRef(null);
   const startingRef = useRef(false);
@@ -26,8 +27,9 @@ export function usePushToTalk({ userId, profile, location }) {
       const blocked = sentTimes.length >= MAX_MESSAGES_PER_HOUR;
       setIsBlocked(blocked);
       setRemainingTime(blocked ? Math.max(0, oldest + HOUR_MILLISECONDS - now) : 0);
+      setRateLimitError(null);
     } catch {
-      setError('Не удалось проверить лимит эфира. Попробуйте ещё раз.');
+      setRateLimitError('Не удалось проверить лимит эфира. Попробуйте ещё раз.');
     }
   }, [userId]);
 
@@ -96,7 +98,10 @@ export function usePushToTalk({ userId, profile, location }) {
     isRecording,
     isBlocked,
     remainingTime,
-    error,
-    clearError: () => setError(null),
+    error: error || rateLimitError,
+    clearError: () => {
+      setError(null);
+      setRateLimitError(null);
+    },
   };
 }
