@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { timestampToMillis } from '../../shared/domain/geo';
 import { joinRadioQueue, leaveRadioQueue, subscribeToQueue } from './data/firestore/radioQueueRepository';
 import { RADIO_QUEUE_LIFETIME_MS } from './domain/radioPolicy';
+import { getRadioQueuePosition, selectCurrentRadioQueue } from './domain/radioQueue';
 
 export function useRadioQueue({ userId, profile, location }) {
   const [users, setUsers] = useState([]);
@@ -35,15 +35,10 @@ export function useRadioQueue({ userId, profile, location }) {
     return () => clearInterval(interval);
   }, []);
 
-  const queue = useMemo(() => {
-    const cutoff = now - RADIO_QUEUE_LIFETIME_MS;
-    return users.filter((user) => timestampToMillis(user.joinedAt) >= cutoff);
-  }, [now, users]);
+  const queue = useMemo(() => selectCurrentRadioQueue(users, now), [now, users]);
 
   const currentSpeaker = queue[0] || null;
-  const queueIndex = queue.findIndex((user) => user.userId === userId);
-  const isInQueue = queueIndex !== -1;
-  const queuePosition = isInQueue ? queueIndex + 1 : null;
+  const { isInQueue, queuePosition } = useMemo(() => getRadioQueuePosition(queue, userId), [queue, userId]);
 
   const join = useCallback(async () => {
     if (!userId) return;

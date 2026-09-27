@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveLocation } from '../../location/useLiveLocation';
-import { distanceInMeters } from '../../../shared/domain/geo';
 import { useAudioPlayback } from '../audio/useAudioPlayback';
 import { usePushToTalk } from '../usePushToTalk';
 import { useRadioFeed } from '../useRadioFeed';
 import { useRadioQueue } from '../useRadioQueue';
+import { selectNearbyRadioQueue } from '../domain/radioQueue';
 
 export function useRadioDashboard(profile, radius) {
   const { location, mapCenter, isLoading: isLocationLoading, error: locationError, requestLocation } = useLiveLocation();
@@ -60,9 +60,10 @@ export function useRadioDashboard(profile, radius) {
     latitudeDelta: Math.max(0.035, (radius / 111_000) * 2.4),
     longitudeDelta: Math.max(0.035, (radius / (111_000 * Math.max(Math.cos((mapCenter.latitude * Math.PI) / 180), 0.2))) * 2.4),
   }), [mapCenter.latitude, mapCenter.longitude, radius]);
-  const nearbyQueue = useMemo(() => queue.filter((user) => (
-    user.userId !== profile.userId && user.location && location && distanceInMeters(location, user.location) <= radius
-  )), [location, profile.userId, queue, radius]);
+  const nearbyQueue = useMemo(
+    () => selectNearbyRadioQueue(queue, { userId: profile.userId, location, radius }),
+    [location, profile.userId, queue, radius],
+  );
   const screenError = recordingError || locationError || queueError?.message
     || (connectionError?.message ? 'Не удалось подключиться к радио.' : null) || notice;
 
