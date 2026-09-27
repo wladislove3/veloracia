@@ -143,6 +143,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           isInQueue={isInQueue}
           isWaiting={isWaiting}
           queuePosition={queuePosition}
+          isLocationReady={Boolean(location && !locationError)}
           isRecording={isRecording}
           isWide={isWide}
           onChangeProfile={onChangeProfile}

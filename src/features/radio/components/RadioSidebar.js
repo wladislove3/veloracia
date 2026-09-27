@@ -33,26 +33,36 @@ function VoiceMessage({ message, isPlaying, onPlay }) {
   );
 }
 
-function PushToTalkControl({ isRecording, isWaiting, queuePosition, isBlocked, remainingTime, recordingElapsed, onPressIn, onPressOut, compact }) {
+function PushToTalkControl({ isRecording, isWaiting, queuePosition, isBlocked, isLocationReady, remainingTime, recordingElapsed, onPressIn, onPressOut, compact }) {
+  const isDisabled = !isRecording && (isBlocked || !isLocationReady);
   const lockLabel = isBlocked
     ? `Лимит · ${Math.ceil(remainingTime / 60_000)} мин`
-    : isWaiting ? `В очереди · №${queuePosition}. Удерживайте` : 'Удерживайте, чтобы говорить · до 30 сек';
+    : !isLocationReady ? 'Включите геопозицию для местного эфира'
+      : isWaiting ? `В очереди · №${queuePosition}. Удерживайте` : 'Удерживайте, чтобы говорить · до 30 сек';
+  const talkTitle = isRecording
+    ? `В эфире · ${formatRecordingDuration(recordingElapsed)}`
+    : isBlocked ? 'Небольшая пауза'
+      : !isLocationReady ? 'Нужна геопозиция'
+        : isWaiting ? `Вы в очереди · №${queuePosition}` : 'Сказать рядом';
+  const talkHint = isRecording
+    ? 'Отпустите, чтобы отправить · до 30 секунд'
+    : isWaiting ? 'Запись начнётся, когда эфир освободится' : lockLabel;
   return (
     <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={isRecording ? `Запись ${formatRecordingDuration(recordingElapsed)}. Отпустите, чтобы отправить голосовое сообщение` : lockLabel}
-        accessibilityState={{ disabled: isBlocked }}
-        disabled={isBlocked}
+        accessibilityState={{ disabled: isDisabled }}
+        disabled={isDisabled}
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         onContextMenu={Platform.OS === 'web' ? (event) => event.preventDefault() : undefined}
-        style={({ pressed }) => [styles.talkButton, compact && styles.talkButtonCompact, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isBlocked && styles.talkButtonBlocked]}
+        style={({ pressed }) => [styles.talkButton, compact && styles.talkButtonCompact, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isDisabled && styles.talkButtonBlocked]}
       >
         <Text style={styles.talkButtonIcon}>{isRecording ? '◉' : '⌁'}</Text>
       </Pressable>
-      <Text style={styles.talkTitle}>{isRecording ? `В эфире · ${formatRecordingDuration(recordingElapsed)}` : isBlocked ? 'Небольшая пауза' : isWaiting ? `Вы в очереди · №${queuePosition}` : 'Сказать рядом'}</Text>
-      <Text style={styles.talkHint}>{isRecording ? 'Отпустите, чтобы отправить · до 30 секунд' : isWaiting ? 'Запись начнётся, когда эфир освободится' : lockLabel}</Text>
+      <Text style={styles.talkTitle}>{talkTitle}</Text>
+      <Text style={styles.talkHint}>{talkHint}</Text>
       {isRecording ? (
         <View accessibilityElementsHidden style={styles.recordingProgressTrack}>
           <View style={[styles.recordingProgressFill, { width: `${Math.min(100, (recordingElapsed / MAX_RECORDING_DURATION_MS) * 100)}%` }]} />
@@ -67,7 +77,7 @@ export function RadioStatusPill({ children, tone }) {
 }
 
 export default function RadioSidebar({
-  isWide, profile, visibleMessages, currentSpeaker, isInQueue, isWaiting, queuePosition, isRecording, isBlocked,
+  isWide, profile, visibleMessages, currentSpeaker, isInQueue, isWaiting, queuePosition, isRecording, isBlocked, isLocationReady,
   remainingTime, recordingElapsed, playingId, onPlay, onPressIn, onPressOut, radius, onChangeProfile,
   isFeedConnected, error, isCompactMobile,
 }) {
@@ -101,7 +111,7 @@ export default function RadioSidebar({
       />
       {error ? <Text accessibilityRole="alert" style={styles.inlineError}>{error}</Text> : null}
       <PushToTalkControl
-        isBlocked={isBlocked} isRecording={isRecording} isWaiting={isWaiting}
+        isBlocked={isBlocked} isLocationReady={isLocationReady} isRecording={isRecording} isWaiting={isWaiting}
         queuePosition={queuePosition}
         onPressIn={onPressIn} onPressOut={onPressOut} remainingTime={remainingTime}
         recordingElapsed={recordingElapsed} compact={isCompactMobile}
