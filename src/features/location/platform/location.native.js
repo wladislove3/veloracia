@@ -1,3 +1,4 @@
+import { LOCATION_ERROR_CODES, normalizeLocationError } from '../domain/locationErrors';
 import * as Location from 'expo-location';
 
 function toCoordinates(position) {
@@ -7,22 +8,30 @@ function toCoordinates(position) {
 export async function getCurrentLocation() {
   const permission = await Location.requestForegroundPermissionsAsync();
   if (permission.status !== 'granted') {
-    throw new Error('Разрешите доступ к геопозиции, чтобы видеть эфир рядом.');
+    const error = new Error(LOCATION_ERROR_CODES.permissionDenied);
+    error.code = LOCATION_ERROR_CODES.permissionDenied;
+    throw error;
   }
-  const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-  return toCoordinates(position);
+  try {
+    const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    return toCoordinates(position);
+  } catch (error) {
+    throw normalizeLocationError(error);
+  }
 }
 
 export async function watchLocation(onLocation, onError) {
   const permission = await Location.getForegroundPermissionsAsync();
   if (permission.status !== 'granted') {
-    onError?.({ code: 1 });
+    const error = new Error(LOCATION_ERROR_CODES.permissionDenied);
+    error.code = LOCATION_ERROR_CODES.permissionDenied;
+    onError?.(error);
     return () => {};
   }
   const subscription = await Location.watchPositionAsync(
     { accuracy: Location.Accuracy.Balanced, timeInterval: 10_000, distanceInterval: 20 },
     (position) => onLocation(toCoordinates(position)),
-    onError
+    (error) => onError?.(normalizeLocationError(error))
   );
   return () => subscription.remove();
 }

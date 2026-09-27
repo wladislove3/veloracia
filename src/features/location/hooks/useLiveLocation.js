@@ -1,33 +1,43 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getCurrentLocation, watchLocation } from './platform/location';
+import { getCurrentLocation, watchLocation } from '../platform/location';
+import { normalizeLocationError } from '../domain/locationErrors';
+import { getLocationErrorMessage } from '../presentation/locationErrorMessage';
 
 const INITIAL_CENTER = { latitude: 55.751244, longitude: 37.618423 };
 
 export function useLiveLocation() {
   const [location, setLocation] = useState(null);
+  const hasLocation = location !== null;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const requestingRef = useRef(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const requestLocation = useCallback(async () => {
     if (requestingRef.current) return;
     requestingRef.current = true;
-    setIsLoading(true);
-    setError(null);
+    if (mountedRef.current) {
+      setIsLoading(true);
+      setError(null);
+    }
     try {
-      setLocation(await getCurrentLocation());
+      const nextLocation = await getCurrentLocation();
+      if (mountedRef.current) setLocation(nextLocation);
     } catch (nextError) {
-      setError(nextError?.code === 1
-        ? 'Разрешите доступ к геопозиции в настройках браузера.'
-        : nextError.message || 'Не удалось определить геопозицию.');
+      if (mountedRef.current) setError(getLocationErrorMessage(normalizeLocationError(nextError)));
     } finally {
       requestingRef.current = false;
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!location) return undefined;
+    if (!hasLocation) return undefined;
     let active = true;
     let stopWatching = () => {};
 
@@ -37,9 +47,7 @@ export function useLiveLocation() {
         setError(null);
       }, (watchError) => {
         if (!active) return;
-        setError(watchError?.code === 1
-          ? 'Разрешите доступ к геопозиции в настройках устройства.'
-          : 'Не удалось обновить геопозицию. Попробуйте определить её снова.');
+        setError(getLocationErrorMessage(normalizeLocationError(watchError), 'watch'));
       }))
       .then((unsubscribe) => {
         if (active) stopWatching = unsubscribe;
@@ -53,7 +61,7 @@ export function useLiveLocation() {
       active = false;
       stopWatching();
     };
-  }, [location !== null]);
+  }, [hasLocation]);
 
   return { location, mapCenter: location || INITIAL_CENTER, isLoading, error, requestLocation };
 }

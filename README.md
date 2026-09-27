@@ -27,10 +27,10 @@ npm run web
 Перед запуском создайте файл `.env.local` по образцу `.env.example`, включите **Anonymous** в Firebase Authentication и примените правила базы и хранилища:
 
 ```bash
-firebase deploy --only firestore:rules,firestore:indexes,storage
+firebase deploy --project default --only firestore:rules,firestore:indexes,storage
 ```
 
-Пошаговые инструкции и список переменных окружения находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Сначала проверьте проект Firebase: клиентские операции требуют авторизованного гостя.
+В репозитории заданы публичные настройки Firebase проекта `veloracia-e93c7`; `.env.local` нужен только для переопределения проекта. Инструкции находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Клиентские операции требуют авторизованного гостя.
 
 ## Структура
 
@@ -44,6 +44,9 @@ src/
       domain/          нормализация профиля и доступные аватары
       screens/         настройка профиля и состояния загрузки
     location/          геопозиция, платформенные адаптеры и карта
+      hooks/           подписка и состояние геопозиции
+      domain/          единые коды ошибок геолокации
+      platform/        адаптеры браузера и Expo Location
     radio/             очередь, лента, запись, воспроизведение и экран эфира
       audio/           отдельные адаптеры захвата звука для web и native
       data/            Firestore-репозитории и локальный кэш
@@ -67,4 +70,4 @@ npm run android:bundle
 
 `web:build` собирает сайт Vercel в `dist/`. `android:bundle` собирает JavaScript-бандл Android с Hermes в `dist-android/`; APK эта команда не создаёт. Нативная сборка на SDK 57 требует iOS 16.4 или новее.
 
-Vercel использует `vercel.json`: команда `npm run web:build`, каталог результата `dist`. Добавьте Firebase-переменные из `.env.example` в Vercel Project Settings для нужных deployment environments.
+Vercel использует `vercel.json`: команда `npm run web:build`, каталог результата `dist`. Firebase-переменные в Vercel нужны только при переопределении настроек проекта.

@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useLiveLocation } from '../../location/useLiveLocation';
+import { useLiveLocation } from '../../location/hooks/useLiveLocation';
 import { useAudioPlayback } from '../audio/useAudioPlayback';
 import { usePushToTalk } from './usePushToTalk';
 import { useRadioFeed } from './useRadioFeed';
