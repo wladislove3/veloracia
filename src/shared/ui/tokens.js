@@ -7,7 +7,7 @@ export const palette = {
   ink: '#13180C',
   text: '#F2F5EB',
   textMuted: '#9CA69A',
-  textFaint: '#68736A',
+  textFaint: '#87938A',
   lime: '#CEFF57',
   limeWash: 'rgba(206, 255, 87, 0.08)',
   record: '#FF6E64',

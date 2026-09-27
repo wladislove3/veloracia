@@ -3,6 +3,7 @@ import { getAuth, getReactNativePersistence, initializeAuth } from 'firebase/aut
 import { app } from './firebaseApp';
 
 function createPersistentAuth() {
+  if (!app) return null;
   try {
     return initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
   } catch (error) {

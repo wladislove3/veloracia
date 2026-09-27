@@ -12,7 +12,11 @@ export function distanceInMeters(from, to) {
     Math.sin(latitudeDelta / 2) ** 2 +
     Math.cos(fromLatitude) * Math.cos(toLatitude) * Math.sin(longitudeDelta / 2) ** 2;
 
-  return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  const normalizedHaversine = Math.min(1, Math.max(0, haversine));
+  return 2 * EARTH_RADIUS_METERS * Math.atan2(
+    Math.sqrt(normalizedHaversine),
+    Math.sqrt(1 - normalizedHaversine)
+  );
 }
 
 export function timestampToMillis(value) {

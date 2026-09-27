@@ -29,7 +29,9 @@ export function useGuestProfile() {
       setUserId(nextId);
       setProfile(restoredProfile);
     } catch (nextError) {
-      setError('Не удалось подключить гостевой профиль. Проверьте настройки Firebase Anonymous sign-in и попробуйте ещё раз.');
+      setError(nextError?.code === 'veloracia/firebase-config-missing'
+        ? 'Не настроено подключение Firebase. Проверьте параметры проекта и перезапустите приложение.'
+        : 'Не удалось подключить гостевой профиль. Проверьте Firebase Anonymous sign-in и попробуйте ещё раз.');
     } finally {
       setIsLoading(false);
     }

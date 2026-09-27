@@ -11,6 +11,7 @@ export function ProfileSetup({ onSave }) {
   const [isSaving, setIsSaving] = useState(false);
 
   async function submit() {
+    if (isSaving) return;
     const cleanName = nickname.trim();
     if (!cleanName) {
       setError('Введите имя для эфира.');
@@ -49,13 +50,25 @@ export function ProfileSetup({ onSave }) {
         <Text style={styles.inputLabel}>ВАШ ЗНАК</Text>
         <View style={styles.avatarGrid}>
           {AVATARS.map((item) => (
-            <Pressable key={item} onPress={() => setAvatar(item)} style={[styles.avatarChoice, avatar === item && styles.avatarChoiceSelected]}>
+            <Pressable
+              key={item}
+              accessibilityRole="button"
+              accessibilityLabel={`Аватар ${item}`}
+              accessibilityState={{ selected: avatar === item }}
+              onPress={() => setAvatar(item)}
+              style={[styles.avatarChoice, avatar === item && styles.avatarChoiceSelected]}
+            >
               <Text style={styles.avatarChoiceText}>{item}</Text>
             </Pressable>
           ))}
         </View>
         {error ? <Text accessibilityRole="alert" style={styles.errorText}>{error}</Text> : null}
-        <Pressable onPress={submit} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+        <Pressable
+          accessibilityState={{ disabled: isSaving, busy: isSaving }}
+          disabled={isSaving}
+          onPress={submit}
+          style={({ pressed }) => [styles.primaryButton, (pressed || isSaving) && styles.pressed]}
+        >
           {isSaving ? <ActivityIndicator color={palette.ink} /> : <Text style={styles.primaryButtonText}>Войти в эфир <Text>↗</Text></Text>}
         </Pressable>
         <Text style={styles.privacyNote}>Без телефона и регистрации. Только ваш голос и район.</Text>

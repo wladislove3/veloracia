@@ -2,7 +2,7 @@
 
 **Городское голосовое радио рядом с вами.** Veloracia показывает эфир на карте, помогает слушать короткие голосовые сообщения поблизости и выходить в общую очередь.
 
-Приложение работает в браузере и на iOS/Android на Expo SDK 54. Веб-версия собирается в статические файлы для Vercel.
+Приложение работает в браузере и на iOS/Android на Expo SDK 57. Для локальной разработки требуется Node.js 22.13 или новее. Веб-версия собирается в статические файлы для Vercel.
 
 ## Возможности
 
@@ -57,5 +57,7 @@ components/            платформенные карты для native и we
 npm run web:build
 npm run android:bundle
 ```
+
+`web:build` собирает сайт Vercel в `dist/`. `android:bundle` собирает JavaScript-бандл Android с Hermes в `dist-android/`; APK эта команда не создаёт. Нативная сборка на SDK 57 требует iOS 16.4 или новее.
 
 Vercel использует `vercel.json`: команда `npm run web:build`, каталог результата `dist`. Добавьте Firebase-переменные из `.env.example` в Vercel Project Settings для нужных deployment environments.

@@ -9,16 +9,41 @@ service cloud.firestore {
       return signedIn() && request.resource.data.userId == request.auth.uid;
     }
 
+    function validLocation(location) {
+      return location == null || (
+        location is map
+        && location.keys().hasAll(['latitude', 'longitude'])
+        && location.keys().hasOnly(['latitude', 'longitude'])
+        && location.latitude is number
+        && location.latitude >= -90
+        && location.latitude <= 90
+        && location.longitude is number
+        && location.longitude >= -180
+        && location.longitude <= 180
+      );
+    }
+
     match /radioMessages/{messageId} {
       allow read: if signedIn();
       allow create: if ownsMessage()
         && request.resource.data.keys().hasOnly([
           'userId', 'nickname', 'avatar', 'audioUrl', 'audioPath', 'mimeType', 'location', 'createdAt'
         ])
+        && request.resource.data.keys().hasAll([
+          'userId', 'nickname', 'avatar', 'audioUrl', 'audioPath', 'mimeType', 'location', 'createdAt'
+        ])
         && request.resource.data.createdAt == request.time
         && request.resource.data.audioPath.matches('radioMessages/' + request.auth.uid + '/.*')
-        && (request.resource.data.location == null || request.resource.data.location is map)
-        && request.resource.data.nickname.size() <= 20;
+        && request.resource.data.audioUrl is string
+        && request.resource.data.audioUrl.size() <= 2000
+        && request.resource.data.mimeType is string
+        && request.resource.data.mimeType.matches('audio/(webm|mp4|m4a|ogg|aac)(;.*)?')
+        && request.resource.data.avatar is string
+        && request.resource.data.avatar.size() <= 8
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 20
+        && validLocation(request.resource.data.location);
       allow update: if false;
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
@@ -29,7 +54,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.keys().hasOnly(['userId', 'nickname', 'avatar', 'location', 'joinedAt'])
-        && request.resource.data.joinedAt == request.time;
+        && request.resource.data.keys().hasAll(['userId', 'nickname', 'avatar', 'location', 'joinedAt'])
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 20
+        && request.resource.data.avatar is string
+        && request.resource.data.avatar.size() <= 8
+        && request.resource.data.joinedAt == request.time
+        && validLocation(request.resource.data.location);
       allow delete: if signedIn() && request.auth.uid == userId;
     }
   }

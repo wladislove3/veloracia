@@ -10,6 +10,8 @@ import { distanceInMeters, timestampToMillis } from '../../../shared/domain/geo'
 import { palette } from '../../../shared/ui/tokens';
 import { styles } from '../radioDashboard.styles';
 
+const RADIUS_OPTIONS = [2_000, 5_000, 10_000, 20_000];
+
 function formatDistance(radius) {
   return radius < 1_000 ? `${radius} м` : `${(radius / 1_000).toLocaleString('ru-RU')} км`;
 }
@@ -63,12 +65,12 @@ function VoiceMessage({ message, isPlaying, onPlay }) {
   );
 }
 
-function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, onPressIn, onPressOut }) {
+function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, onPressIn, onPressOut, compact }) {
   const lockLabel = isBlocked
     ? `Лимит · ${Math.ceil(remainingTime / 60_000)} мин`
     : isWaiting ? 'Вы в очереди · удерживайте' : 'Удерживайте, чтобы говорить';
   return (
-    <View style={styles.talkArea}>
+    <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={isRecording ? 'Отпустите, чтобы отправить голосовое сообщение' : lockLabel}
@@ -77,7 +79,7 @@ function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, o
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         onContextMenu={Platform.OS === 'web' ? (event) => event.preventDefault() : undefined}
-        style={({ pressed }) => [styles.talkButton, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isBlocked && styles.talkButtonBlocked]}
+        style={({ pressed }) => [styles.talkButton, compact && styles.talkButtonCompact, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isBlocked && styles.talkButtonBlocked]}
       >
         <Text style={styles.talkButtonIcon}>{isRecording ? '◉' : '⌁'}</Text>
       </Pressable>
@@ -106,25 +108,28 @@ function RadioSidebar({
   onChangeProfile,
   isConnected,
   error,
+  isCompactMobile,
 }) {
   return (
-    <View style={[styles.sidebar, isWide ? styles.sidebarWide : styles.sidebarMobile]}>
-      <View style={styles.sidebarHeader}>
-        <View>
-          <Text style={styles.sectionEyebrow}>ПРЯМО СЕЙЧАС</Text>
-          <Text style={styles.sidebarTitle}>Голоса рядом</Text>
+    <View style={[styles.sidebar, isWide ? styles.sidebarWide : styles.sidebarMobile, isCompactMobile && styles.sidebarCompact]}>
+      {isWide ? (
+        <View style={styles.sidebarHeader}>
+          <View>
+            <Text style={styles.sectionEyebrow}>ПРЯМО СЕЙЧАС</Text>
+            <Text style={styles.sidebarTitle}>Голоса рядом</Text>
+          </View>
+          <View style={styles.countBadge}><Text style={styles.countBadgeText}>{visibleMessages.length}</Text></View>
         </View>
-        <View style={styles.countBadge}><Text style={styles.countBadgeText}>{visibleMessages.length}</Text></View>
-      </View>
+      ) : null}
 
-      <View style={styles.onAirCard}>
+      {isWide || currentSpeaker ? <View style={styles.onAirCard}>
         <View style={styles.onAirIcon}><Text style={styles.onAirIconText}>{currentSpeaker?.avatar || '◌'}</Text></View>
         <View style={styles.onAirCopy}>
           <Text style={styles.onAirEyebrow}>{currentSpeaker ? 'СЕЙЧАС ГОВОРИТ' : 'ЧАСТОТА СВОБОДНА'}</Text>
           <Text numberOfLines={1} style={styles.onAirName}>{currentSpeaker?.nickname || 'Будьте первым'}</Text>
         </View>
         <View style={[styles.onAirSignal, isInQueue && styles.onAirSignalWaiting]}><View style={styles.onAirSignalDot} /></View>
-      </View>
+      </View> : null}
 
       <View style={styles.feedHeading}>
         <Text style={styles.feedTitle}>Недавние сообщения</Text>
@@ -155,9 +160,10 @@ function RadioSidebar({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         remainingTime={remainingTime}
+        compact={isCompactMobile}
       />
 
-      <View style={styles.sidebarFooter}>
+      {isWide ? <View style={styles.sidebarFooter}>
         <View style={styles.footerUser}>
           <View style={styles.footerAvatar}><Text>{profile.avatar}</Text></View>
           <View style={styles.footerUserCopy}>
@@ -168,14 +174,15 @@ function RadioSidebar({
         <Pressable onPress={onChangeProfile} accessibilityRole="button" accessibilityLabel="Сменить профиль" style={styles.profileMenuButton}>
           <Text style={styles.profileMenuButtonText}>···</Text>
         </Pressable>
-      </View>
+      </View> : null}
     </View>
   );
 }
 
 export default function RadioDashboard({ profile, onChangeProfile }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isWide = width >= 960;
+  const isCompactMobile = !isWide && height < 720;
   const { location, mapCenter, error: locationError, requestLocation } = useLiveLocation();
   const [radius, setRadius] = useState(10_000);
   const { visibleMessages, activeUsers, connectionError } = useRadioFeed({ userId: profile.userId, location, radius });
@@ -269,15 +276,15 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           </View>
         </View>
         <View style={styles.topBarRight}>
-          <StatusPill tone={location ? 'live' : 'warning'}>{location ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом` : 'Геопозиция выключена'}</StatusPill>
+          {width >= 520 ? <StatusPill tone={location ? 'live' : 'warning'}>{location ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом` : 'Геопозиция выключена'}</StatusPill> : null}
           <Pressable onPress={onChangeProfile} style={styles.headerAvatar} accessibilityRole="button" accessibilityLabel="Изменить профиль">
             <Text>{profile.avatar}</Text>
           </Pressable>
         </View>
       </View>
 
-      <View style={[styles.dashboardLayout, !isWide && styles.dashboardLayoutMobile]}>
-        <View style={[styles.mapPanel, !isWide && styles.mapPanelMobile]}>
+      <View style={[styles.dashboardLayout, !isWide && styles.dashboardLayoutMobile, isCompactMobile && styles.dashboardLayoutCompact]}>
+        <View style={[styles.mapPanel, !isWide && styles.mapPanelMobile, isCompactMobile && styles.mapPanelCompact]}>
           <MapView style={styles.map} region={mapRegion} showsUserLocation={false} showsCompass={false}>
             {location ? <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} /> : null}
             {location ? <Marker coordinate={location} title="Вы" description="Вы здесь" /> : null}
@@ -313,7 +320,14 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
                   <View><Text style={styles.radiusEyebrow}>РАДИУС ЭФИРА</Text><Text style={styles.radiusValue}>{formatDistance(radius)}</Text></View>
                   <View style={styles.radiusOptions}>
                     {RADIUS_OPTIONS.map((option) => (
-                      <Pressable key={option} onPress={() => setRadius(option)} style={[styles.radiusOption, radius === option && styles.radiusOptionActive]}>
+                      <Pressable
+                        key={option}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Радиус эфира ${formatDistance(option)}`}
+                        accessibilityState={{ selected: radius === option }}
+                        onPress={() => setRadius(option)}
+                        style={[styles.radiusOption, radius === option && styles.radiusOptionActive]}
+                      >
                         <Text style={[styles.radiusOptionText, radius === option && styles.radiusOptionTextActive]}>{formatDistance(option)}</Text>
                       </Pressable>
                     ))}
@@ -344,6 +358,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           remainingTime={remainingTime}
           setRadius={setRadius}
           visibleMessages={visibleMessages}
+          isCompactMobile={isCompactMobile}
         />
       </View>
     </SafeAreaView>
