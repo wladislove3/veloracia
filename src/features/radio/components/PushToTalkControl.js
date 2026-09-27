@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
-import { styles } from '../radioDashboard.styles';
+import { pushToTalkStyles as styles } from './pushToTalkControl.styles';
 import { formatRecordingDuration } from '../presentation/formatters';
 import { MAX_RECORDING_DURATION_MS } from '../domain/radioPolicy';
 
@@ -31,7 +31,7 @@ export default function PushToTalkControl({
     : isWaiting ? 'Запись начнётся, когда эфир освободится' : lockLabel;
 
   return (
-    <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
+    <View style={[styles.area, compact && styles.areaCompact]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={isRecording ? `Запись ${formatRecordingDuration(recordingElapsed)}. Отпустите, чтобы отправить голосовое сообщение` : lockLabel}
@@ -40,12 +40,12 @@ export default function PushToTalkControl({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         onContextMenu={Platform.OS === 'web' ? (event) => event.preventDefault() : undefined}
-        style={({ pressed }) => [styles.talkButton, compact && styles.talkButtonCompact, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isDisabled && styles.talkButtonBlocked]}
+        style={({ pressed }) => [styles.button, compact && styles.buttonCompact, isRecording && styles.recording, pressed && styles.pressed, isDisabled && styles.blocked]}
       >
-        <Text style={styles.talkButtonIcon}>{isRecording ? '◉' : '⌁'}</Text>
+        <Text style={styles.icon}>{isRecording ? '◉' : '⌁'}</Text>
       </Pressable>
-      <Text style={styles.talkTitle}>{talkTitle}</Text>
-      <Text style={styles.talkHint}>{talkHint}</Text>
+      <Text style={styles.title}>{talkTitle}</Text>
+      <Text style={styles.hint}>{talkHint}</Text>
       {isRecording ? (
         <View accessibilityElementsHidden style={styles.recordingProgressTrack}>
           <View style={[styles.recordingProgressFill, { width: `${Math.min(100, (recordingElapsed / MAX_RECORDING_DURATION_MS) * 100)}%` }]} />

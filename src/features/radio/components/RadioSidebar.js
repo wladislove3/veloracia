@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
-import { styles } from '../radioDashboard.styles';
+import { sidebarStyles as styles } from './radioSidebar.styles';
 import { formatDistanceInMeters } from '../presentation/formatters';
 import RadioStatusPill from './RadioStatusPill';
 import VoiceMessageCard from './VoiceMessageCard';
