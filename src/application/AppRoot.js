@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useGuestProfile } from '../features/profile/useGuestProfile';
-import { LoadingScreen, ProfileSetup, SetupRequired } from '../features/profile/components/ProfileScreens';
+import { useGuestProfile } from '../features/profile/hooks/useGuestProfile';
+import { LoadingScreen, ProfileSetup, SetupRequired } from '../features/profile/screens/ProfileScreens';
 import RadioDashboard from '../features/radio/screens/RadioDashboard';
 
 export default function AppRoot() {
