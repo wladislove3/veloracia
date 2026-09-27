@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ensureGuestUser } from '../../../shared/infrastructure/firebase/firebaseClient';
+import { ensureGuestUser } from '../data/guestSessionRepository';
 import { getSavedProfile, removeSavedProfile, saveProfile as persistProfile } from '../data/profileRepository';
 
 export function useGuestProfile() {

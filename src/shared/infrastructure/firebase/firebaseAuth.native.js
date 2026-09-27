@@ -7,7 +7,8 @@ function createPersistentAuth() {
   try {
     return initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
   } catch (error) {
-    return getAuth(app);
+    if (error?.code === 'auth/already-initialized') return getAuth(app);
+    throw error;
   }
 }
 
