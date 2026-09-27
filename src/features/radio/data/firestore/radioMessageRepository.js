@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../../../../shared/infrastructure/firebase/firebaseClient';
-import { RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
+import { MAX_MESSAGES_PER_HOUR, RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
 
 const getMessagesCollection = () => collection(db, 'radioMessages');
 
@@ -27,22 +27,18 @@ export function subscribeToRecentMessages(onMessages, onError) {
   );
 }
 
-export async function countMessagesSince(userId, since) {
+export async function getRecentMessageTimestamps(userId, since) {
   const sentSinceQuery = query(
     getMessagesCollection(),
     where('userId', '==', userId),
-    where('createdAt', '>', Timestamp.fromMillis(since))
+    where('createdAt', '>', Timestamp.fromMillis(since)),
+    orderBy('createdAt', 'asc'),
+    limit(MAX_MESSAGES_PER_HOUR),
   );
-  try {
-    const snapshot = await getDocs(sentSinceQuery);
-    return snapshot.docs.map((entry) => entry.data().createdAt?.toMillis?.() ?? since);
-  } catch (error) {
-    if (error?.code !== 'failed-precondition') throw error;
-    const fallback = await getDocs(query(getMessagesCollection(), where('userId', '==', userId)));
-    return fallback.docs
-      .map((entry) => entry.data().createdAt?.toMillis?.())
-      .filter((timestamp) => timestamp && timestamp > since);
-  }
+  const snapshot = await getDocs(sentSinceQuery);
+  return snapshot.docs
+    .map((entry) => entry.data().createdAt?.toMillis?.())
+    .filter(Number.isFinite);
 }
 
 export async function publishVoiceMessage({ userId, profile, location, audioBytes, mimeType }) {

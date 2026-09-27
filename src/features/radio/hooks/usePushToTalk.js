@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { countMessagesSince, publishVoiceMessage } from '../data/firestore/radioMessageRepository';
+import { getRecentMessageTimestamps, publishVoiceMessage } from '../data/firestore/radioMessageRepository';
 import { useAudioCapture } from '../audio/useAudioCapture';
 import {
   MAX_MESSAGES_PER_HOUR,
@@ -24,7 +24,7 @@ export function usePushToTalk({ userId, profile, location }) {
     if (!userId) return;
     try {
       const now = Date.now();
-      const sentTimes = await countMessagesSince(userId, now - RADIO_MESSAGE_RATE_WINDOW_MS);
+      const sentTimes = await getRecentMessageTimestamps(userId, now - RADIO_MESSAGE_RATE_WINDOW_MS);
       const oldest = Math.min(...sentTimes);
       const blocked = sentTimes.length >= MAX_MESSAGES_PER_HOUR;
       setIsBlocked(blocked);
