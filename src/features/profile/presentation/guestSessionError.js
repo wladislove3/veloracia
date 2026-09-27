@@ -37,6 +37,17 @@ export function getGuestSessionError(error) {
     };
   }
 
+  if (error?.code === 'auth/api-key-not-valid.-please-pass-a-valid-api-key.') {
+    return {
+      title: 'Firebase отклонил API-ключ',
+      message: 'Сайт получил неверную конфигурацию Firebase из переменных окружения Vercel.',
+      instruction: 'Для проекта veloracia-e93c7 удалите старые EXPO_PUBLIC_FIREBASE_* overrides либо задайте полный актуальный набор и включите EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG=true.',
+      settingsUrl: 'https://vercel.com/wladislove3s-projects/veloracia/settings/environment-variables',
+      settingsLabel: 'Открыть переменные Vercel',
+      code: error.code,
+    };
+  }
+
   if (error?.code === 'auth/network-request-failed') {
     return {
       title: 'Нет связи с Firebase',

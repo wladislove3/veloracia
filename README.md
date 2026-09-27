@@ -30,7 +30,7 @@ npm run web
 firebase deploy --project default --only firestore:rules,firestore:indexes,storage
 ```
 
-В репозитории заданы публичные настройки Firebase проекта `veloracia-e93c7`; `.env.local` нужен только для переопределения проекта. Инструкции находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Клиентские операции требуют авторизованного гостя.
+В репозитории заданы публичные настройки Firebase проекта `veloracia-e93c7`; значения из окружения намеренно игнорируются, пока `EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG` не установлен в `true`. Для переопределения укажите полный актуальный набор `EXPO_PUBLIC_FIREBASE_*`. Инструкции находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Клиентские операции требуют авторизованного гостя.
 
 ## Структура
 

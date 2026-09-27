@@ -1,32 +1,16 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
-import MapView, { Circle, Marker } from '../../location/components/MapView';
-import { styles } from '../radioDashboard.styles';
+import React, { useState } from 'react';
+import { SafeAreaView, View, useWindowDimensions } from 'react-native';
+import RadioDashboardHeader from '../components/RadioDashboardHeader';
+import RadioMapPanel from '../components/RadioMapPanel';
 import RadioSidebar from '../components/RadioSidebar';
-import RadioStatusPill from '../components/RadioStatusPill';
-import LocationMapPlaceholder from '../components/LocationMapPlaceholder';
+import { DEFAULT_RADIO_RADIUS_METERS } from '../domain/radioPolicy';
+import { formatNearbyRiderCount } from '../presentation/formatters';
 import { useRadioDashboard } from '../hooks/useRadioDashboard';
-import { DEFAULT_RADIO_RADIUS_METERS, RADIO_RADIUS_OPTIONS_METERS } from '../domain/radioPolicy';
-import { formatDistanceInMeters, formatNearbyRiderCount } from '../presentation/formatters';
+import { styles } from '../radioDashboard.styles';
 
-function nearbyCountLabel(users, queue, userId) {
-  const identities = new Set([...users, ...queue].map((user) => user.userId).filter((id) => id && id !== userId));
+function getNearbyStatus(activeUsers, queue, userId) {
+  const identities = new Set([...activeUsers, ...queue].map((user) => user.userId).filter((id) => id && id !== userId));
   return formatNearbyRiderCount(identities.size);
-}
-
-function IconButton({ label, onPress, accessibilityLabel, style, disabled = false, busy = false }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled, busy }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [styles.iconButton, style, pressed && styles.pressed, disabled && styles.disabled]}
-    >
-      {busy ? <ActivityIndicator color="#CEFF57" /> : <Text style={styles.iconButtonText}>{label}</Text>}
-    </Pressable>
-  );
 }
 
 export default function RadioDashboard({ profile, onChangeProfile }) {
@@ -35,133 +19,58 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const isCompactMobile = !isWide && height < 720;
   const [radius, setRadius] = useState(DEFAULT_RADIO_RADIUS_METERS);
   const radio = useRadioDashboard(profile, radius);
-  const {
-    location, locationError, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
-    currentSpeaker, isInQueue, queuePosition, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
-    playingId, playMessage, handlePressIn, handlePressOut, screenError, isFeedConnected,
-  } = radio;
-  const queuedUserIds = useMemo(() => new Set(nearbyQueue.map((user) => user.userId)), [nearbyQueue]);
-  const activeUsersNotQueued = useMemo(
-    () => activeUsers.filter((user) => user.userId !== profile.userId && !queuedUserIds.has(user.userId)),
-    [activeUsers, profile.userId, queuedUserIds],
-  );
-  const statusLabel = !isFeedConnected
+  const statusLabel = !radio.isFeedConnected
     ? 'Нет связи с эфиром'
-    : locationError
+    : radio.locationError
       ? 'Нет обновления геопозиции'
-      : location
-        ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом`
+      : radio.location
+        ? `${getNearbyStatus(radio.activeUsers, radio.nearbyQueue, profile.userId)} рядом`
         : 'Геопозиция выключена';
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.topBar}>
-        <View style={styles.brandLockup}>
-          <View style={styles.brandMarkSmall}><Text style={styles.brandMarkText}>V</Text></View>
-          <View><Text style={styles.brandName}>veloracia</Text><Text style={styles.brandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
-        </View>
-        <View style={styles.topBarRight}>
-          {width >= 520 ? <RadioStatusPill tone={isFeedConnected && location && !locationError ? 'live' : 'warning'}>
-            {statusLabel}
-          </RadioStatusPill> : null}
-          <Pressable onPress={onChangeProfile} style={styles.headerAvatar} accessibilityRole="button" accessibilityLabel="Изменить профиль">
-            <Text>{profile.avatar}</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={[styles.dashboardLayout, !isWide && styles.dashboardLayoutMobile, isCompactMobile && styles.dashboardLayoutCompact]}>
-        <View style={[styles.mapPanel, !isWide && styles.mapPanelMobile, isCompactMobile && styles.mapPanelCompact]}>
-          {location ? (
-            <MapView style={styles.map} region={mapRegion} showsUserLocation={false} showsCompass={false}>
-              <Circle center={location} radius={radius} fillColor="rgba(206,255,87,0.08)" strokeColor="rgba(206,255,87,0.62)" strokeWidth={1} />
-              <Marker coordinate={location} title="Вы" description="Вы здесь" />
-              {nearbyQueue.map((user) => (
-                <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
-              ))}
-              {activeUsersNotQueued.map((user) => (
-                <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
-              ))}
-            </MapView>
-          ) : <LocationMapPlaceholder />}
-
-          <View style={styles.mapTopOverlay} pointerEvents="box-none">
-            <View style={styles.mapTitleCard}>
-              <Text style={styles.mapTitleEyebrow}>ВАШ РАЙОН</Text>
-              <Text style={styles.mapTitle}>{location ? 'Эфир поблизости' : isLocationLoading ? 'Находим ваш район…' : 'Найдите свой эфир'}</Text>
-            </View>
-            <IconButton
-              label="◎"
-              accessibilityLabel={isLocationLoading ? 'Определяем геопозицию' : 'Обновить геопозицию'}
-              onPress={requestLocation}
-              style={styles.locateButton}
-              disabled={isLocationLoading}
-              busy={isLocationLoading}
-            />
-          </View>
-
-          <View style={styles.mapBottomOverlay} pointerEvents="box-none">
-            {!location ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: isLocationLoading, busy: isLocationLoading }}
-                disabled={isLocationLoading}
-                onPress={requestLocation}
-                style={({ pressed }) => [styles.locationPrompt, pressed && styles.pressed, isLocationLoading && styles.disabled]}
-              >
-                <View style={styles.locationPromptIcon}><Text>⌖</Text></View>
-                <View style={styles.locationPromptCopy}>
-                  <Text style={styles.locationPromptTitle}>{isLocationLoading ? 'Ищем вас на карте' : 'Включите геопозицию'}</Text>
-                  <Text style={styles.locationPromptText}>{isLocationLoading ? 'Это займёт пару секунд' : 'Чтобы услышать людей поблизости'}</Text>
-                </View>
-                <Text style={styles.locationPromptArrow}>↗</Text>
-              </Pressable>
-            ) : (
-              <View style={styles.radiusCard}>
-                <View style={styles.radiusHeader}>
-                  <View><Text style={styles.radiusEyebrow}>РАДИУС ЭФИРА</Text><Text style={styles.radiusValue}>{formatDistanceInMeters(radius)}</Text></View>
-                  <View style={styles.radiusOptions}>
-                    {RADIO_RADIUS_OPTIONS_METERS.map((option) => (
-                      <Pressable
-                        key={option}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Радиус эфира ${formatDistanceInMeters(option)}`}
-                        accessibilityState={{ selected: radius === option }}
-                        onPress={() => setRadius(option)}
-                        style={[styles.radiusOption, radius === option && styles.radiusOptionActive]}
-                      >
-                        <Text style={[styles.radiusOptionText, radius === option && styles.radiusOptionTextActive]}>{formatDistanceInMeters(option)}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            )}
-            <Text style={styles.mapAttribution}>КАРТА · OPENSTREETMAP</Text>
-          </View>
-        </View>
-
+      <RadioDashboardHeader
+        profile={profile}
+        onChangeProfile={onChangeProfile}
+        statusLabel={statusLabel}
+        statusTone={radio.isFeedConnected && radio.location && !radio.locationError ? 'live' : 'warning'}
+        showStatus={width >= 520}
+      />
+      <View style={[styles.layout, !isWide && styles.layoutMobile, isCompactMobile && styles.layoutCompact]}>
+        <RadioMapPanel
+          location={radio.location}
+          isLoading={radio.isLocationLoading}
+          requestLocation={radio.requestLocation}
+          mapRegion={radio.mapRegion}
+          nearbyQueue={radio.nearbyQueue}
+          activeUsers={radio.activeUsers}
+          userId={profile.userId}
+          radius={radius}
+          onRadiusChange={setRadius}
+          isWide={isWide}
+          isCompactMobile={isCompactMobile}
+        />
         <RadioSidebar
-          currentSpeaker={currentSpeaker}
-          error={screenError}
-          isBlocked={isBlocked}
-          isFeedConnected={isFeedConnected}
-          isInQueue={isInQueue}
-          isWaiting={isWaiting}
-          queuePosition={queuePosition}
-          isLocationReady={Boolean(location && !locationError)}
-          isRecording={isRecording}
+          currentSpeaker={radio.currentSpeaker}
+          error={radio.screenError}
+          isBlocked={radio.isBlocked}
+          isFeedConnected={radio.isFeedConnected}
+          isInQueue={radio.isInQueue}
+          isWaiting={radio.isWaiting}
+          queuePosition={radio.queuePosition}
+          isLocationReady={Boolean(radio.location && !radio.locationError)}
+          isRecording={radio.isRecording}
           isWide={isWide}
           onChangeProfile={onChangeProfile}
-          onPlay={playMessage}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          playingId={playingId}
+          onPlay={radio.playMessage}
+          onPressIn={radio.handlePressIn}
+          onPressOut={radio.handlePressOut}
+          playingId={radio.playingId}
           profile={profile}
           radius={radius}
-          remainingTime={remainingTime}
-          recordingElapsed={recordingElapsed}
-          visibleMessages={visibleMessages}
+          remainingTime={radio.remainingTime}
+          recordingElapsed={radio.recordingElapsed}
+          visibleMessages={radio.visibleMessages}
           isCompactMobile={isCompactMobile}
         />
       </View>

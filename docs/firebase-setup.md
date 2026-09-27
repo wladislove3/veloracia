@@ -6,7 +6,7 @@ The repository's Firebase CLI default project is `veloracia-e93c7`.
 
 ## Configuration
 
-The repository defaults to the Firebase Web App configuration for `veloracia-e93c7`, so local and Vercel builds need no Firebase environment variables. Set `EXPO_PUBLIC_FIREBASE_*` in `.env.local` or Vercel only when intentionally targeting a different Firebase app or project.
+The repository defaults to the Firebase Web App configuration for `veloracia-e93c7`, so local and Vercel builds need no Firebase environment variables. To intentionally target a different Firebase app or project, set `EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG=true` and provide all six current `EXPO_PUBLIC_FIREBASE_*` values. Partial overrides are ignored to prevent mixed project configuration.
 
 For Android native builds, add `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` from a Maps SDK for Android key restricted to this app's package and signing certificate. Expo reads it through `app.config.js`. The web map uses CARTO/OpenStreetMap tiles and does not need this key. No Google Maps key is committed to the repository.
 

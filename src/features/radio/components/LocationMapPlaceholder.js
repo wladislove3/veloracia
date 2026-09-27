@@ -1,10 +1,10 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { styles } from '../radioDashboard.styles';
+import { mapPanelStyles as styles } from './radioMapPanel.styles';
 
 export default function LocationMapPlaceholder() {
   return (
-    <View accessibilityElementsHidden style={styles.mapPlaceholder}>
+    <View accessibilityElementsHidden style={styles.placeholder}>
       <View style={[styles.placeholderRoad, styles.placeholderRoadOne]} />
       <View style={[styles.placeholderRoad, styles.placeholderRoadTwo]} />
       <View style={[styles.placeholderRoad, styles.placeholderRoadThree]} />
