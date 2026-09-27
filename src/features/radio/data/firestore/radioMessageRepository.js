@@ -12,7 +12,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadString } from 'firebase/storage';
-import { db, storage } from '../../../../../services/firebaseConfig';
+import { db, storage } from '../../../../shared/infrastructure/firebase/firebaseClient';
 import { RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
 
 const getMessagesCollection = () => collection(db, 'radioMessages');

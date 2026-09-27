@@ -47,8 +47,8 @@ src/
       presentation/    форматирование расстояний и времени
   shared/
     domain/            независимые правила предметной области
+    infrastructure/    Firebase и платформенная аутентификация
     ui/                дизайн-токены
-services/              инициализация Firebase и гостевой вход
 components/            платформенные карты для native и web
 ```
 

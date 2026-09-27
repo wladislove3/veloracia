@@ -10,7 +10,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/features/location/platform` adapts browser geolocation and Expo Location to one location feature interface.
 - `src/features/radio/domain` owns radio limits and radius choices; `presentation` owns user-facing distance and time formatting.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
-- `services/firebaseConfig.js` owns Firebase initialization and guest authentication.
+- `src/shared/infrastructure/firebase` owns Firebase initialization, platform-specific auth, Firestore, and Storage clients.
 - `components/MapView.js` and `components/MapView.web.js` isolate platform-specific maps.
 
 ## Data flow
