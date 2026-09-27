@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { getRecentMessageTimestamps } from '../data/firestore/radioMessageRepository';
-import { publishVoiceMessage } from '../application/publishVoiceMessage';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createRadioMessageId, getRecentMessageTimestamps, saveRadioMessage } from '../data/firestore/radioMessageRepository';
+import { deleteRadioAudio, getRadioAudioPath, uploadRadioAudio } from '../data/storage/radioAudioRepository';
+import { createPublishVoiceMessage } from '../application/publishVoiceMessage';
 import { useAudioCapture } from '../audio/useAudioCapture';
 import {
   MAX_MESSAGES_PER_HOUR,
@@ -20,6 +21,13 @@ export function usePushToTalk({ userId, profile, location }) {
   const stopTimerRef = useRef(null);
   const startingRef = useRef(false);
   const stoppingRef = useRef(false);
+  const publishVoiceMessage = useMemo(() => createPublishVoiceMessage({
+    createMessageId: createRadioMessageId,
+    getAudioPath: getRadioAudioPath,
+    uploadAudio: uploadRadioAudio,
+    saveMessage: saveRadioMessage,
+    deleteAudio: deleteRadioAudio,
+  }), []);
 
   const refreshRateLimit = useCallback(async () => {
     if (!userId) return;

@@ -8,10 +8,12 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/features` owns each feature's UI, state, data adapters, and domain policy. Radio Firestore adapters and its device cache stay inside the radio feature.
 - `src/features/profile/presentation` translates Firebase guest-session failures into actionable setup guidance; profile hooks keep provider-specific wording out of orchestration.
 - `src/features/radio/audio` isolates recording and playback behind platform-specific Expo module resolution (`.web.js` and `.native.js`). The radio feature owns recording limits and publishing; audio adapters only acquire, play, and release media resources.
+- `src/features/radio/application/publishVoiceMessage.js` contains the publish use case. It coordinates audio upload, Firestore persistence, and cleanup if persistence fails. Repository operations are injected by the hook layer.
 - `src/features/location/platform` adapts browser geolocation and Expo Location to one location feature interface; both adapters normalize failures before the location hook presents them.
+- `src/features/location/domain/mapRegion.js` owns map-region validation and zoom bounds; `src/features/location/hooks/useMapViewport.js` owns map pan and zoom state.
 - `src/features/radio/domain` owns radio limits and radius choices; `presentation` owns user-facing distance and time formatting.
 - `src/features/radio/domain/radioFeed.js` and `radioQueue.js` select retained, nearby feed items and derive queue state as pure rules. React hooks coordinate subscriptions and actions; they do not own feed-selection policy.
-- `src/features/radio/hooks` groups dashboard composition, feed and queue subscriptions, recording limits, and the push-to-talk session lifecycle.
+- `src/features/radio/hooks` groups dashboard composition, feed and queue subscriptions, recording limits, and the push-to-talk session lifecycle. Hooks connect application operations to Firestore and Storage adapters.
 - `src/features/radio/components` separates the dashboard shell from reusable status, voice-message, and push-to-talk UI components.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
 - `src/shared/infrastructure/firebase` initializes Firebase and exposes platform-specific Auth plus Firestore and Storage clients. Profile-owned repositories implement guest-session behavior, keeping that use case out of the shared SDK setup.
@@ -23,6 +25,10 @@ The app keeps its UI and backend access separate while sharing one product flow 
 2. Platform recorders pass browser `Blob`s or native byte arrays directly to Storage, avoiding a base64 copy. Firestore receives a small metadata document only after the upload succeeds.
 3. The app subscribes to a bounded Firestore feed and a 30-minute queue window. The queue listener refreshes at the window boundary so abandoned entries stop accumulating in long-running sessions. Realtime listeners are released when their feature unmounts.
 4. Location permission is requested only after the user asks to center the map. Coordinates are attached to radio messages and queue presence.
+
+## Dependency direction
+
+Screens use feature hooks. Application use cases depend on injected operations rather than Firebase SDK modules. Hooks compose those use cases with repositories; repositories own Firebase and local-storage calls. Domain modules remain independent of React and infrastructure.
 
 Platform adapters expose the same audio contract to feature hooks. Browser APIs stay out of native bundles, while Expo Audio and native file access stay out of the web implementation.
 
