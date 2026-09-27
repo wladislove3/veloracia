@@ -104,7 +104,7 @@ export function useRadioDashboard(profile, radius) {
   }, [play, stop]);
 
   return {
-    location, mapCenter, isLocationLoading, requestLocation, mapRegion, nearbyQueue,
+    location, locationError, mapCenter, isLocationLoading, requestLocation, mapRegion, nearbyQueue,
     visibleMessages, activeUsers, currentSpeaker, isInQueue, isWaiting,
     isRecording, isBlocked, remainingTime, recordingElapsed, playingId, playMessage,
     handlePressIn, handlePressOut, screenError, isFeedConnected: !connectionError,

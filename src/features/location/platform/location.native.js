@@ -13,12 +13,16 @@ export async function getCurrentLocation() {
   return toCoordinates(position);
 }
 
-export async function watchLocation(onLocation) {
+export async function watchLocation(onLocation, onError) {
   const permission = await Location.getForegroundPermissionsAsync();
-  if (permission.status !== 'granted') return () => {};
+  if (permission.status !== 'granted') {
+    onError?.({ code: 1 });
+    return () => {};
+  }
   const subscription = await Location.watchPositionAsync(
     { accuracy: Location.Accuracy.Balanced, timeInterval: 10_000, distanceInterval: 20 },
-    (position) => onLocation(toCoordinates(position))
+    (position) => onLocation(toCoordinates(position)),
+    onError
   );
   return () => subscription.remove();
 }

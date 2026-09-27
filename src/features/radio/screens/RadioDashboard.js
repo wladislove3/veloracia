@@ -35,15 +35,17 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const [radius, setRadius] = useState(DEFAULT_RADIO_RADIUS_METERS);
   const radio = useRadioDashboard(profile, radius);
   const {
-    location, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
+    location, locationError, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
     currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
     playingId, playMessage, handlePressIn, handlePressOut, screenError, isFeedConnected,
   } = radio;
   const statusLabel = !isFeedConnected
     ? 'Нет связи с эфиром'
-    : location
-      ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом`
-      : 'Геопозиция выключена';
+    : locationError
+      ? 'Нет обновления геопозиции'
+      : location
+        ? `${nearbyCountLabel(activeUsers, nearbyQueue, profile.userId)} рядом`
+        : 'Геопозиция выключена';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -53,7 +55,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           <View><Text style={styles.brandName}>veloracia</Text><Text style={styles.brandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
         </View>
         <View style={styles.topBarRight}>
-          {width >= 520 ? <RadioStatusPill tone={isFeedConnected && location ? 'live' : 'warning'}>
+          {width >= 520 ? <RadioStatusPill tone={isFeedConnected && location && !locationError ? 'live' : 'warning'}>
             {statusLabel}
           </RadioStatusPill> : null}
           <Pressable onPress={onChangeProfile} style={styles.headerAvatar} accessibilityRole="button" accessibilityLabel="Изменить профиль">

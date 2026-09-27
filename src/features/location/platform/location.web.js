@@ -16,11 +16,11 @@ export function getCurrentLocation() {
   });
 }
 
-export function watchLocation(onLocation) {
+export function watchLocation(onLocation, onError) {
   const geolocation = getGeolocation();
   const watchId = geolocation.watchPosition(
     ({ coords }) => onLocation({ latitude: coords.latitude, longitude: coords.longitude }),
-    () => undefined,
+    onError,
     { enableHighAccuracy: true, maximumAge: 15_000 }
   );
   return () => geolocation.clearWatch(watchId);

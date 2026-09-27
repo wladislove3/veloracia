@@ -35,13 +35,18 @@ export function useLiveLocation() {
       .then(() => watchLocation((nextLocation) => {
         setLocation(nextLocation);
         setError(null);
+      }, (watchError) => {
+        if (!active) return;
+        setError(watchError?.code === 1
+          ? 'Разрешите доступ к геопозиции в настройках устройства.'
+          : 'Не удалось обновить геопозицию. Попробуйте определить её снова.');
       }))
       .then((unsubscribe) => {
         if (active) stopWatching = unsubscribe;
         else unsubscribe();
       })
-      .catch((watchError) => {
-        if (active) setError(watchError.message || 'Не удалось обновлять геопозицию.');
+      .catch(() => {
+        if (active) setError('Не удалось включить обновление геопозиции. Попробуйте определить её снова.');
       });
 
     return () => {
