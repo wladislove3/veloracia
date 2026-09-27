@@ -5,26 +5,12 @@ import { styles } from '../radioDashboard.styles';
 import RadioSidebar, { RadioStatusPill } from '../components/RadioSidebar';
 import LocationMapPlaceholder from '../components/LocationMapPlaceholder';
 import { useRadioDashboard } from '../hooks/useRadioDashboard';
-
-const RADIUS_OPTIONS = [2_000, 5_000, 10_000, 20_000];
-
-function formatDistance(radius) {
-  return radius < 1_000 ? `${radius} м` : `${(radius / 1_000).toLocaleString('ru-RU')} км`;
-}
+import { DEFAULT_RADIO_RADIUS_METERS, RADIO_RADIUS_OPTIONS_METERS } from '../domain/radioPolicy';
+import { formatDistanceInMeters, formatNearbyRiderCount } from '../presentation/formatters';
 
 function nearbyCountLabel(users, queue, userId) {
   const identities = new Set([...users, ...queue].map((user) => user.userId).filter((id) => id && id !== userId));
-  const count = identities.size;
-  const remainder100 = count % 100;
-  const remainder10 = count % 10;
-  const noun = remainder100 >= 11 && remainder100 <= 14
-    ? 'велосипедистов'
-    : remainder10 === 1
-      ? 'велосипедист'
-      : remainder10 >= 2 && remainder10 <= 4
-        ? 'велосипедиста'
-        : 'велосипедистов';
-  return `${count} ${noun}`;
+  return formatNearbyRiderCount(identities.size);
 }
 
 function IconButton({ label, onPress, accessibilityLabel, style, disabled = false, busy = false }) {
@@ -46,7 +32,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const { width, height } = useWindowDimensions();
   const isWide = width >= 960;
   const isCompactMobile = !isWide && height < 720;
-  const [radius, setRadius] = useState(10_000);
+  const [radius, setRadius] = useState(DEFAULT_RADIO_RADIUS_METERS);
   const radio = useRadioDashboard(profile, radius);
   const {
     location, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
@@ -120,18 +106,18 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
             ) : (
               <View style={styles.radiusCard}>
                 <View style={styles.radiusHeader}>
-                  <View><Text style={styles.radiusEyebrow}>РАДИУС ЭФИРА</Text><Text style={styles.radiusValue}>{formatDistance(radius)}</Text></View>
+                  <View><Text style={styles.radiusEyebrow}>РАДИУС ЭФИРА</Text><Text style={styles.radiusValue}>{formatDistanceInMeters(radius)}</Text></View>
                   <View style={styles.radiusOptions}>
-                    {RADIUS_OPTIONS.map((option) => (
+                    {RADIO_RADIUS_OPTIONS_METERS.map((option) => (
                       <Pressable
                         key={option}
                         accessibilityRole="button"
-                        accessibilityLabel={`Радиус эфира ${formatDistance(option)}`}
+                        accessibilityLabel={`Радиус эфира ${formatDistanceInMeters(option)}`}
                         accessibilityState={{ selected: radius === option }}
                         onPress={() => setRadius(option)}
                         style={[styles.radiusOption, radius === option && styles.radiusOptionActive]}
                       >
-                        <Text style={[styles.radiusOptionText, radius === option && styles.radiusOptionTextActive]}>{formatDistance(option)}</Text>
+                        <Text style={[styles.radiusOptionText, radius === option && styles.radiusOptionTextActive]}>{formatDistanceInMeters(option)}</Text>
                       </Pressable>
                     ))}
                   </View>

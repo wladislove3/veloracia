@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { distanceInMeters, timestampToMillis } from '../../shared/domain/geo';
-import { subscribeToRecentMessages } from '../../shared/data/radioMessageRepository';
+import { subscribeToRecentMessages } from './data/firestore/radioMessageRepository';
 import { cacheRadioMessages, getCachedRadioMessages } from './data/radioFeedCache';
-
-const CACHE_MAX_AGE = 3 * 60 * 60 * 1000;
+import { RADIO_MESSAGE_RETENTION_MS } from './domain/radioPolicy';
 
 export function useRadioFeed({ userId, location, radius }) {
   const [messages, setMessages] = useState([]);
@@ -44,7 +43,7 @@ export function useRadioFeed({ userId, location, radius }) {
   }, []);
 
   const visibleMessages = useMemo(() => {
-    const cutoff = now - CACHE_MAX_AGE;
+    const cutoff = now - RADIO_MESSAGE_RETENTION_MS;
     return messages.filter((message) => {
       if (timestampToMillis(message.createdAt) < cutoff && !message.audioData) return false;
       if (message.userId === userId) return true;
@@ -54,7 +53,7 @@ export function useRadioFeed({ userId, location, radius }) {
   }, [location, messages, now, radius, userId]);
 
   const activeUsers = useMemo(() => {
-    const cutoff = now - 3 * 60 * 60 * 1000;
+    const cutoff = now - RADIO_MESSAGE_RETENTION_MS;
     const latestByUser = new Map();
 
     for (const message of messages) {

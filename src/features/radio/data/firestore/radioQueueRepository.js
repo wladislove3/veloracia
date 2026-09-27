@@ -1,5 +1,5 @@
 import { collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, where } from 'firebase/firestore';
-import { db } from '../../../services/firebaseConfig';
+import { db } from '../../../../../services/firebaseConfig';
 
 const getQueueCollection = () => collection(db, 'radioQueue');
 

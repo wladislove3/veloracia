@@ -12,12 +12,13 @@ import {
   where,
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadString } from 'firebase/storage';
-import { db, storage } from '../../../services/firebaseConfig';
+import { db, storage } from '../../../../../services/firebaseConfig';
+import { RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
 
 const getMessagesCollection = () => collection(db, 'radioMessages');
 
 export function subscribeToRecentMessages(onMessages, onError) {
-  const recentMessagesQuery = query(getMessagesCollection(), orderBy('createdAt', 'desc'), limit(100));
+  const recentMessagesQuery = query(getMessagesCollection(), orderBy('createdAt', 'desc'), limit(RADIO_RECENT_MESSAGES_LIMIT));
 
   return onSnapshot(
     recentMessagesQuery,

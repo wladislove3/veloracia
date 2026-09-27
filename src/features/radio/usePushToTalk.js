@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { countMessagesSince, publishVoiceMessage } from '../../shared/data/radioMessageRepository';
+import { countMessagesSince, publishVoiceMessage } from './data/firestore/radioMessageRepository';
 import { useAudioCapture } from './audio/useAudioCapture';
-
-const MAX_MESSAGES_PER_HOUR = 10;
-const MAX_RECORDING_MILLISECONDS = 30_000;
-const MAX_AUDIO_BYTES = 700 * 1024;
-const MIN_RECORDING_MILLISECONDS = 250;
-const HOUR_MILLISECONDS = 60 * 60 * 1000;
+import {
+  MAX_MESSAGES_PER_HOUR,
+  MAX_RECORDING_AUDIO_BYTES,
+  MAX_RECORDING_DURATION_MS,
+  MIN_RECORDING_DURATION_MS,
+  RADIO_MESSAGE_RATE_WINDOW_MS,
+} from './domain/radioPolicy';
 
 export function usePushToTalk({ userId, profile, location }) {
   const [isBlocked, setIsBlocked] = useState(false);
@@ -23,11 +24,11 @@ export function usePushToTalk({ userId, profile, location }) {
     if (!userId) return;
     try {
       const now = Date.now();
-      const sentTimes = await countMessagesSince(userId, now - HOUR_MILLISECONDS);
+      const sentTimes = await countMessagesSince(userId, now - RADIO_MESSAGE_RATE_WINDOW_MS);
       const oldest = Math.min(...sentTimes);
       const blocked = sentTimes.length >= MAX_MESSAGES_PER_HOUR;
       setIsBlocked(blocked);
-      setRemainingTime(blocked ? Math.max(0, oldest + HOUR_MILLISECONDS - now) : 0);
+      setRemainingTime(blocked ? Math.max(0, oldest + RADIO_MESSAGE_RATE_WINDOW_MS - now) : 0);
       setRateLimitError(null);
     } catch {
       setRateLimitError('Не удалось проверить лимит эфира. Попробуйте ещё раз.');
@@ -35,7 +36,7 @@ export function usePushToTalk({ userId, profile, location }) {
   }, [userId]);
 
   const publish = useCallback(async (audioBase64, mimeType) => {
-    if (audioBase64.length * 0.75 > MAX_AUDIO_BYTES) {
+    if (audioBase64.length * 0.75 > MAX_RECORDING_AUDIO_BYTES) {
       throw new Error('Сообщение слишком длинное. Запишите голос короче.');
     }
     await publishVoiceMessage({ userId, profile, location, audioBase64, mimeType });
@@ -50,7 +51,7 @@ export function usePushToTalk({ userId, profile, location }) {
     }
     const updateElapsed = () => {
       const elapsed = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
-      setRecordingElapsed(Math.min(MAX_RECORDING_MILLISECONDS, elapsed));
+      setRecordingElapsed(Math.min(MAX_RECORDING_DURATION_MS, elapsed));
     };
     updateElapsed();
     const interval = setInterval(updateElapsed, 1_000);
@@ -65,8 +66,8 @@ export function usePushToTalk({ userId, profile, location }) {
     const elapsed = Date.now() - startTimeRef.current;
     let captureStopped = false;
     try {
-      if (startTimeRef.current && elapsed < MIN_RECORDING_MILLISECONDS) {
-        await new Promise((resolve) => setTimeout(resolve, MIN_RECORDING_MILLISECONDS - elapsed));
+      if (startTimeRef.current && elapsed < MIN_RECORDING_DURATION_MS) {
+        await new Promise((resolve) => setTimeout(resolve, MIN_RECORDING_DURATION_MS - elapsed));
       }
       await stopCapture();
       captureStopped = true;
@@ -89,7 +90,7 @@ export function usePushToTalk({ userId, profile, location }) {
       stopTimerRef.current = setTimeout(async () => {
         await stopRecording();
         await onAutoStop?.();
-      }, MAX_RECORDING_MILLISECONDS);
+      }, MAX_RECORDING_DURATION_MS);
       return true;
     } catch (nextError) {
       releaseCapture();

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { timestampToMillis } from '../../shared/domain/geo';
-import { joinRadioQueue, leaveRadioQueue, subscribeToQueue } from '../../shared/data/radioQueueRepository';
-
-const QUEUE_LIFETIME = 30 * 60 * 1000;
+import { joinRadioQueue, leaveRadioQueue, subscribeToQueue } from './data/firestore/radioQueueRepository';
+import { RADIO_QUEUE_LIFETIME_MS } from './domain/radioPolicy';
 
 export function useRadioQueue({ userId, profile, location }) {
   const [users, setUsers] = useState([]);
@@ -14,7 +13,7 @@ export function useRadioQueue({ userId, profile, location }) {
     const refreshSubscription = () => {
       unsubscribe();
       unsubscribe = subscribeToQueue(
-        Date.now() - QUEUE_LIFETIME,
+        Date.now() - RADIO_QUEUE_LIFETIME_MS,
         (nextUsers) => {
           setUsers(nextUsers);
           setError(null);
@@ -24,7 +23,7 @@ export function useRadioQueue({ userId, profile, location }) {
     };
 
     refreshSubscription();
-    const interval = setInterval(refreshSubscription, QUEUE_LIFETIME);
+    const interval = setInterval(refreshSubscription, RADIO_QUEUE_LIFETIME_MS);
     return () => {
       clearInterval(interval);
       unsubscribe();
@@ -37,7 +36,7 @@ export function useRadioQueue({ userId, profile, location }) {
   }, []);
 
   const queue = useMemo(() => {
-    const cutoff = now - QUEUE_LIFETIME;
+    const cutoff = now - RADIO_QUEUE_LIFETIME_MS;
     return users.filter((user) => timestampToMillis(user.joinedAt) >= cutoff);
   }, [now, users]);
 
