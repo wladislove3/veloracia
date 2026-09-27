@@ -11,6 +11,7 @@ const HOUR_MILLISECONDS = 60 * 60 * 1000;
 export function usePushToTalk({ userId, profile, location }) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
+  const [recordingElapsed, setRecordingElapsed] = useState(0);
   const [error, setError] = useState(null);
   const [rateLimitError, setRateLimitError] = useState(null);
   const startTimeRef = useRef(0);
@@ -41,6 +42,20 @@ export function usePushToTalk({ userId, profile, location }) {
     await refreshRateLimit();
   }, [location, profile, refreshRateLimit, userId]);
   const { isRecording, startCapture, stopCapture, releaseCapture } = useAudioCapture(publish);
+
+  useEffect(() => {
+    if (!isRecording) {
+      setRecordingElapsed(0);
+      return undefined;
+    }
+    const updateElapsed = () => {
+      const elapsed = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
+      setRecordingElapsed(Math.min(MAX_RECORDING_MILLISECONDS, elapsed));
+    };
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1_000);
+    return () => clearInterval(interval);
+  }, [isRecording]);
 
   const stopRecording = useCallback(async () => {
     clearTimeout(stopTimerRef.current);
@@ -101,6 +116,7 @@ export function usePushToTalk({ userId, profile, location }) {
     isRecording,
     isBlocked,
     remainingTime,
+    recordingElapsed,
     error: error || rateLimitError,
     clearError: () => {
       setError(null);

@@ -10,7 +10,7 @@ export function useRadioDashboard(profile, radius) {
   const { location, mapCenter, isLoading: isLocationLoading, error: locationError, requestLocation } = useLiveLocation();
   const { visibleMessages, activeUsers, connectionError } = useRadioFeed({ userId: profile.userId, location, radius });
   const { queue, currentSpeaker, isInQueue, join, leave, error: queueError } = useRadioQueue({ userId: profile.userId, profile, location });
-  const { isRecording, isBlocked, remainingTime, error: recordingError, startRecording, stopRecording } = usePushToTalk({
+  const { isRecording, isBlocked, remainingTime, recordingElapsed, error: recordingError, startRecording, stopRecording } = usePushToTalk({
     userId: profile.userId,
     profile,
     location,
@@ -106,7 +106,7 @@ export function useRadioDashboard(profile, radius) {
   return {
     location, mapCenter, isLocationLoading, requestLocation, mapRegion, nearbyQueue,
     visibleMessages, activeUsers, currentSpeaker, isInQueue, isWaiting,
-    isRecording, isBlocked, remainingTime, playingId, playMessage,
+    isRecording, isBlocked, remainingTime, recordingElapsed, playingId, playMessage,
     handlePressIn, handlePressOut, screenError, isConnected: !connectionError,
   };
 }

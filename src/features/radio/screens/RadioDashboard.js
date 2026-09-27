@@ -50,7 +50,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const radio = useRadioDashboard(profile, radius);
   const {
     location, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
-    currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime,
+    currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
     playingId, playMessage, handlePressIn, handlePressOut, screenError, isConnected,
   } = radio;
 
@@ -159,6 +159,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           profile={profile}
           radius={radius}
           remainingTime={remainingTime}
+          recordingElapsed={recordingElapsed}
           visibleMessages={visibleMessages}
           isCompactMobile={isCompactMobile}
         />

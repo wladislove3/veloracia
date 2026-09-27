@@ -43,7 +43,12 @@ function VoiceMessage({ message, isPlaying, onPlay }) {
   );
 }
 
-function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, onPressIn, onPressOut, compact }) {
+function formatRecordingTime(milliseconds) {
+  const seconds = Math.floor(milliseconds / 1_000);
+  return `00:${String(seconds).padStart(2, '0')}`;
+}
+
+function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, recordingElapsed, onPressIn, onPressOut, compact }) {
   const lockLabel = isBlocked
     ? `Лимит · ${Math.ceil(remainingTime / 60_000)} мин`
     : isWaiting ? 'Вы в очереди · удерживайте' : 'Удерживайте, чтобы говорить · до 30 сек';
@@ -51,7 +56,7 @@ function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, o
     <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={isRecording ? 'Отпустите, чтобы отправить голосовое сообщение' : lockLabel}
+        accessibilityLabel={isRecording ? `Запись ${formatRecordingTime(recordingElapsed)}. Отпустите, чтобы отправить голосовое сообщение` : lockLabel}
         accessibilityState={{ disabled: isBlocked }}
         disabled={isBlocked}
         onPressIn={onPressIn}
@@ -61,8 +66,8 @@ function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, o
       >
         <Text style={styles.talkButtonIcon}>{isRecording ? '◉' : '⌁'}</Text>
       </Pressable>
-      <Text style={styles.talkTitle}>{isRecording ? 'В эфире…' : isBlocked ? 'Небольшая пауза' : isWaiting ? 'Вы следующие' : 'Сказать рядом'}</Text>
-      <Text style={styles.talkHint}>{isRecording ? 'Отпустите кнопку, чтобы отправить' : isWaiting ? 'Запись начнётся автоматически' : lockLabel}</Text>
+      <Text style={styles.talkTitle}>{isRecording ? `В эфире · ${formatRecordingTime(recordingElapsed)}` : isBlocked ? 'Небольшая пауза' : isWaiting ? 'Вы следующие' : 'Сказать рядом'}</Text>
+      <Text style={styles.talkHint}>{isRecording ? 'Отпустите, чтобы отправить · до 30 секунд' : isWaiting ? 'Запись начнётся автоматически' : lockLabel}</Text>
     </View>
   );
 }
@@ -73,7 +78,7 @@ export function RadioStatusPill({ children, tone }) {
 
 export default function RadioSidebar({
   isWide, profile, visibleMessages, currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked,
-  remainingTime, playingId, onPlay, onPressIn, onPressOut, radius, onChangeProfile,
+  remainingTime, recordingElapsed, playingId, onPlay, onPressIn, onPressOut, radius, onChangeProfile,
   isConnected, error, isCompactMobile,
 }) {
   return (
@@ -107,7 +112,8 @@ export default function RadioSidebar({
       {error ? <Text accessibilityRole="alert" style={styles.inlineError}>{error}</Text> : null}
       <PushToTalkControl
         isBlocked={isBlocked} isRecording={isRecording} isWaiting={isWaiting}
-        onPressIn={onPressIn} onPressOut={onPressOut} remainingTime={remainingTime} compact={isCompactMobile}
+        onPressIn={onPressIn} onPressOut={onPressOut} remainingTime={remainingTime}
+        recordingElapsed={recordingElapsed} compact={isCompactMobile}
       />
 
       {isWide ? <View style={styles.sidebarFooter}>
