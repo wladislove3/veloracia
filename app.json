@@ -1,45 +1,37 @@
 {
   "expo": {
-    "name": "veloraz-demo",
-    "slug": "veloraz-demo",
+    "name": "Veloracia",
+    "slug": "veloracia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0D1010"
     },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Приложению необходим доступ к микрофону для записи голосовых сообщений",
         "NSLocationWhenInUseUsageDescription": "Приложению необходим доступ к геолокации для отображения вашей позиции на карте"
-      },
-      "config": {
-        "googleMapsApiKey": "AIzaSyDUJh0giUrUAEChavSwzQqteVicyKMn2HM"
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0D1010"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.wladislove.velorazdemo",
       "versionCode": 1,
-      "minSdkVersion": 24,
-      "targetSdkVersion": 34,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
-      ],
-      "config": {
-        "googleMapsApiKey": "AIzaSyDUJh0giUrUAEChavSwzQqteVicyKMn2HM"
-      }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -50,7 +42,10 @@
       }
     },
     "plugins": [
-      "expo-location"
+      "expo-location",
+      "expo-audio",
+      "expo-asset",
+      "expo-font"
     ]
   }
 }

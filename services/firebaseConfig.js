@@ -1,33 +1,29 @@
-import { initializeApp } from 'firebase/app';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { app } from './firebaseApp';
+import { auth } from './firebaseAuth';
 
-// Load Firebase config from environment variables
-// Add EXPO_PUBLIC_ prefix for Expo to expose these to the app
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
-};
+export { app, auth };
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
-// Validate that all required config values are provided
-const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'messagingSenderId', 'appId'];
-const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
+export async function ensureGuestUser() {
+  const currentUser = await new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        unsubscribe();
+        resolve(user);
+      },
+      (error) => {
+        unsubscribe();
+        reject(error);
+      },
+    );
+  });
 
-if (missingKeys.length > 0) {
-  console.error(
-    'Missing Firebase configuration values:',
-    missingKeys.join(', '),
-    '\nPlease ensure EXPO_PUBLIC_FIREBASE_* environment variables are set in .env.local'
-  );
+  const user = currentUser || (await signInAnonymously(auth)).user;
+  return user.uid;
 }
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-export { app, db, storage }; 

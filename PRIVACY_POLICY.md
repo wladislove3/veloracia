@@ -1,131 +1,37 @@
-# Privacy Policy for Veloraz
+# Veloracia privacy notice
 
-**Last Updated: November 10, 2025**
+**Last updated: 27 September 2026**
 
-## 1. Introduction
+Veloracia is a location-based voice radio for web and mobile. This notice describes the data handled by the current application.
 
-Veloraz ("the App") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
+## Data the app uses
 
-## 2. Information We Collect
+- **Guest identity:** Firebase Anonymous Authentication creates a UID. Your nickname and emoji avatar are saved on your device.
+- **Location:** the app asks for location only when you choose the map location control. Coordinates can be attached to a voice message or queue entry. They are visible to other signed-in Veloracia guests so the nearby radio can work. The app does not request background location.
+- **Voice messages:** when you release the talk button, the recording is uploaded to Firebase Storage. A Firestore record contains its storage path, nickname, avatar, timestamp, and location when available.
+- **Queue presence:** while you join the radio queue, Firestore stores your UID, nickname, avatar, location when available, and queue time.
+- **Local cache:** the app saves your profile and a small cache of recent message metadata on your device.
 
-### 2.1 Location Data
-- **GPS Coordinates**: We collect your precise location (latitude, longitude) when you grant location permission. This is used to:
-  - Display your position on the map
-  - Show other users' recent locations (within the last 3 hours)
-  - Provide local radio queue functionality
+The app does not request your phone number, email address, contacts, or advertising identifier.
 
-### 2.2 Audio Data
-- **Voice Messages**: When you record and send voice messages, we store:
-  - Base64-encoded audio data
-  - Message timestamp
-  - Your user ID and display name
-  - Message location metadata
+## How data is used and shared
 
-### 2.3 User Profile Information
-- **Display Name**: Your chosen nickname or username
-- **Avatar**: Your selected emoji avatar
-- **User ID**: A unique identifier (UUID-based)
+Firebase processes authentication, message metadata, queue state, and audio files. Signed-in Veloracia guests can read the shared radio feed and listen to its messages. The interactive map loads map tiles from its map providers, which may receive the network and viewport information needed to serve those tiles. Data is not used by the app for advertising.
 
-### 2.4 Device & Technical Data
-We do NOT collect:
-- Device IMEI or unique device identifiers
-- Phone number
-- Email address
-- Personal contact information
+## Retention and deletion
 
-## 3. Data Storage
+The interface filters older messages from the nearby feed, but that filter does not delete their Firestore records or audio files. The current app has no self-service control to delete a sent message or guest account. Clearing the local app data removes local profile/cache data and may end access to the guest identity; it does not remove messages already sent. Contact details for data requests must be supplied by the service operator before public release.
 
-### 3.1 Cloud Storage
-All user data (audio messages, locations, profiles) is stored in:
-- **Google Firebase Firestore** (cloud database)
-- Location: US (as per Firebase default)
+## Your choices
 
-### 3.2 Local Storage
-- User ID and profile preferences are stored locally on your device
-- Audio cache is automatically cleaned up periodically
+- You can decline location permission. The map can still open, but nearby filtering and location sharing will be unavailable.
+- You can deny microphone permission. Recording and sending voice messages will be unavailable.
+- You can change your nickname and avatar from the profile control.
 
-### 3.3 Data Retention
-- Voice messages are retained indefinitely in the database
-- Location data is displayed for up to 3 hours, then archived
-- Users can delete their account by clearing app data
+## Security
 
-## 4. Data Usage
+Firestore and Storage rules in this repository scope writes to the authenticated guest UID. Those rules take effect only after Anonymous Authentication is enabled in Firebase and the rules are deployed. Data is sent over HTTPS. No online service can guarantee absolute security.
 
-We use your data exclusively for:
-- Real-time voice radio communication
-- Map-based location display
-- Queue management for radio speakers
-- App functionality and user experience improvement
+## Operator information
 
-**We do NOT:**
-- Sell your data to third parties
-- Use data for advertising or marketing
-- Share data with advertisers or analytics companies
-- Track you outside the app
-
-## 5. Third-Party Services
-
-### 5.1 Firebase (Google Cloud)
-- Stores messages and user profiles
-- [Google Privacy Policy](https://policies.google.com/privacy)
-
-### 5.2 Google Maps API
-- Displays the interactive map
-- [Google Maps Privacy Policy](https://policies.google.com/privacy)
-
-### 5.3 Expo (React Native Backend)
-- App distribution and updates
-- [Expo Privacy Policy](https://expo.dev/privacy)
-
-## 6. User Rights
-
-### 6.1 Access Your Data
-You can request all data we hold about you by contacting support.
-
-### 6.2 Delete Your Data
-- Clear app local storage: Go to device settings → Apps → Veloraz → Storage → Clear Data
-- This deletes your user ID and profile
-- Messages you sent remain in the database (cannot be retroactively deleted)
-
-### 6.3 Opt-Out of Location Sharing
-- Deny location permission in device settings
-- App will notify you that map features are unavailable
-
-## 7. Permissions
-
-The app requests the following device permissions:
-
-| Permission | Purpose | Required? |
-|-----------|---------|-----------|
-| **Microphone** | Record voice messages | Yes |
-| **Location (Fine)** | Get precise GPS coordinates | Yes |
-| **Location (Coarse)** | Fallback location data | No |
-
-## 8. Security
-
-We implement:
-- HTTPS encryption for all data in transit
-- Firebase security rules to restrict unauthorized access
-- No passwords stored (anonymous authentication via UUID)
-- Regular security audits
-
-**Note:** No system is 100% secure. We cannot guarantee absolute security of your data.
-
-## 9. Children's Privacy
-
-This app is **not intended for children under 13**. We do not knowingly collect information from children. If we become aware of data from a child under 13, we will delete it immediately.
-
-## 10. Changes to This Policy
-
-We may update this Privacy Policy as the app evolves. We will notify users of material changes via app notification or email if applicable.
-
-## 11. Contact Us
-
-If you have questions about this Privacy Policy or our practices, contact us:
-
-**Email:** support@veloraz.app
-**Address:** [Your Company Address]
-
----
-
-By using Veloraz, you agree to this Privacy Policy.
+The repository does not include the service operator's legal name, address, jurisdiction, or a working privacy contact. Add those details before publishing this notice as a legal policy.
