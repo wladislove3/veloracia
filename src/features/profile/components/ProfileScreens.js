@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { palette, radii, shadows, spacing } from '../../../shared/ui/tokens';
 import { PROFILE_AVATARS } from '../domain/profile';
 
@@ -30,74 +30,79 @@ export function ProfileSetup({ onSave }) {
 
   return (
     <SafeAreaView style={styles.profileScreen}>
-      <View style={[styles.profileCard, isWide && styles.profileCardWide]}>
-        {isWide ? (
-          <View style={styles.heroPanel}>
-            <View style={styles.heroOrbitLarge} />
-            <View style={styles.heroOrbitSmall} />
-            <View style={styles.heroBrand}>
-              <View style={[styles.brandMark, styles.heroBrandMark]}><Text style={styles.brandMarkText}>V</Text></View>
-              <View><Text style={styles.heroBrandName}>veloracia</Text><Text style={styles.heroBrandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
-            </View>
-            <View style={styles.heroMessage}>
-              <Text style={styles.heroEyebrow}>ВАША ВОЛНА УЖЕ РЯДОМ</Text>
-              <Text style={styles.heroTitle}>Город звучит ближе.</Text>
-              <Text style={styles.heroCopy}>Услышать знакомую улицу. Подсказать дорогу. Поймать голоса тех, кто рядом.</Text>
-              <View style={styles.waveform} accessibilityElementsHidden>
-                {[18, 30, 22, 42, 27, 50, 24, 36, 19, 44, 27, 16, 34, 21, 40, 25].map((bar, index) => (
-                  <View key={index} style={[styles.waveformBar, { height: bar }]} />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.profileKeyboard}>
+        <ScrollView contentContainerStyle={styles.profileScrollContent} keyboardShouldPersistTaps="handled">
+          <View style={[styles.profileCard, isWide && styles.profileCardWide]}>
+            {isWide ? (
+              <View style={styles.heroPanel}>
+                <View style={styles.heroOrbitLarge} />
+                <View style={styles.heroOrbitSmall} />
+                <View style={styles.heroBrand}>
+                  <View style={[styles.brandMark, styles.heroBrandMark]}><Text style={styles.brandMarkText}>V</Text></View>
+                  <View><Text style={styles.heroBrandName}>veloracia</Text><Text style={styles.heroBrandCaption}>ГОРОДСКОЕ РАДИО</Text></View>
+                </View>
+                <View style={styles.heroMessage}>
+                  <Text style={styles.heroEyebrow}>ВАША ВОЛНА УЖЕ РЯДОМ</Text>
+                  <Text style={styles.heroTitle}>Город звучит ближе.</Text>
+                  <Text style={styles.heroCopy}>Услышать знакомую улицу. Подсказать дорогу. Поймать голоса тех, кто рядом.</Text>
+                  <View style={styles.waveform} accessibilityElementsHidden>
+                    {[18, 30, 22, 42, 27, 50, 24, 36, 19, 44, 27, 16, 34, 21, 40, 25].map((bar, index) => (
+                      <View key={index} style={[styles.waveformBar, { height: bar }]} />
+                    ))}
+                  </View>
+                </View>
+                <View style={styles.heroFooter}><View style={styles.heroLiveDot} /><Text style={styles.heroFooterText}>ЛЮДИ ИЗ ВАШЕГО РАЙОНА</Text></View>
+              </View>
+            ) : null}
+
+            <View style={[styles.formPanel, isWide && styles.formPanelWide]}>
+              {!isWide ? <View style={styles.brandMark}><Text style={styles.brandMarkText}>V</Text></View> : null}
+              <Text style={styles.eyebrow}>{isWide ? 'ПЕРЕД ПЕРВЫМ ЭФИРОМ' : 'VELO · ЛОКАЛЬНЫЙ ЭФИР'}</Text>
+              <Text style={[styles.profileTitle, isWide && styles.profileTitleWide]}>{isWide ? 'Как вас звать?' : 'Город звучит ближе.'}</Text>
+              <Text style={styles.profileSubtitle}>{isWide ? 'Выберите позывной и знак — и присоединяйтесь к голосам рядом.' : 'Выберите имя — и слушайте голоса людей вокруг.'}</Text>
+              <Text style={styles.inputLabel}>ВАШ ПОЗЫВНОЙ</Text>
+              <TextInput
+                accessibilityLabel="Ваш позывной"
+                autoComplete="nickname"
+                autoCapitalize="words"
+                maxLength={20}
+                onChangeText={(value) => { setNickname(value); setError(''); }}
+                onSubmitEditing={submit}
+                placeholder="Например, Лис"
+                placeholderTextColor={palette.textFaint}
+                returnKeyType="done"
+                style={styles.nameInput}
+                value={nickname}
+              />
+              <Text style={styles.inputLabel}>ВАШ ЗНАК</Text>
+              <View style={[styles.avatarGrid, isWide && styles.avatarGridWide]}>
+                {PROFILE_AVATARS.map((item) => (
+                  <Pressable
+                    key={item}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Аватар ${item}`}
+                    accessibilityState={{ selected: avatar === item }}
+                    onPress={() => setAvatar(item)}
+                    style={[styles.avatarChoice, isWide && styles.avatarChoiceWide, avatar === item && styles.avatarChoiceSelected]}
+                  >
+                    <Text style={styles.avatarChoiceText}>{item}</Text>
+                  </Pressable>
                 ))}
               </View>
-            </View>
-            <View style={styles.heroFooter}><View style={styles.heroLiveDot} /><Text style={styles.heroFooterText}>ЛЮДИ ИЗ ВАШЕГО РАЙОНА</Text></View>
-          </View>
-        ) : null}
-
-        <View style={[styles.formPanel, isWide && styles.formPanelWide]}>
-          {!isWide ? <View style={styles.brandMark}><Text style={styles.brandMarkText}>V</Text></View> : null}
-          <Text style={styles.eyebrow}>{isWide ? 'ПЕРЕД ПЕРВЫМ ЭФИРОМ' : 'VELO · ЛОКАЛЬНЫЙ ЭФИР'}</Text>
-          <Text style={[styles.profileTitle, isWide && styles.profileTitleWide]}>{isWide ? 'Как вас звать?' : 'Город звучит ближе.'}</Text>
-          <Text style={styles.profileSubtitle}>{isWide ? 'Выберите позывной и знак — и присоединяйтесь к голосам рядом.' : 'Выберите имя — и слушайте голоса людей вокруг.'}</Text>
-          <Text style={styles.inputLabel}>ВАШ ПОЗЫВНОЙ</Text>
-          <TextInput
-            accessibilityLabel="Ваш позывной"
-            autoCapitalize="words"
-            maxLength={20}
-            onChangeText={(value) => { setNickname(value); setError(''); }}
-            onSubmitEditing={submit}
-            placeholder="Например, Лис"
-            placeholderTextColor={palette.textFaint}
-            returnKeyType="done"
-            style={styles.nameInput}
-            value={nickname}
-          />
-          <Text style={styles.inputLabel}>ВАШ ЗНАК</Text>
-          <View style={[styles.avatarGrid, isWide && styles.avatarGridWide]}>
-            {PROFILE_AVATARS.map((item) => (
+              {error ? <Text accessibilityRole="alert" style={styles.errorText}>{error}</Text> : null}
               <Pressable
-                key={item}
-                accessibilityRole="button"
-                accessibilityLabel={`Аватар ${item}`}
-                accessibilityState={{ selected: avatar === item }}
-                onPress={() => setAvatar(item)}
-                style={[styles.avatarChoice, isWide && styles.avatarChoiceWide, avatar === item && styles.avatarChoiceSelected]}
+                accessibilityState={{ disabled: isSaving, busy: isSaving }}
+                disabled={isSaving}
+                onPress={submit}
+                style={({ pressed }) => [styles.primaryButton, (pressed || isSaving) && styles.pressed]}
               >
-                <Text style={styles.avatarChoiceText}>{item}</Text>
+                {isSaving ? <ActivityIndicator color={palette.ink} /> : <Text style={styles.primaryButtonText}>Войти в эфир <Text>↗</Text></Text>}
               </Pressable>
-            ))}
+              <Text style={styles.privacyNote}>Без телефона и регистрации. Только ваш голос и район.</Text>
+            </View>
           </View>
-          {error ? <Text accessibilityRole="alert" style={styles.errorText}>{error}</Text> : null}
-          <Pressable
-            accessibilityState={{ disabled: isSaving, busy: isSaving }}
-            disabled={isSaving}
-            onPress={submit}
-            style={({ pressed }) => [styles.primaryButton, (pressed || isSaving) && styles.pressed]}
-          >
-            {isSaving ? <ActivityIndicator color={palette.ink} /> : <Text style={styles.primaryButtonText}>Войти в эфир <Text>↗</Text></Text>}
-          </Pressable>
-          <Text style={styles.privacyNote}>Без телефона и регистрации. Только ваш голос и район.</Text>
-        </View>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -129,7 +134,9 @@ export function LoadingScreen() {
 
 const styles = StyleSheet.create({
   brandMark: { width: 60, height: 60, borderRadius: 22, backgroundColor: palette.lime, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[7] },
-  profileScreen: { flex: 1, minHeight: Platform.OS === 'web' ? '100vh' : undefined, backgroundColor: palette.page, justifyContent: 'center', alignItems: 'center', padding: spacing[5] },
+  profileScreen: { flex: 1, minHeight: Platform.OS === 'web' ? '100vh' : undefined, backgroundColor: palette.page },
+  profileKeyboard: { flex: 1 },
+  profileScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: spacing[5] },
   profileCard: { width: '100%', maxWidth: 430, padding: spacing[7], borderRadius: radii.xl, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.line, ...shadows.panel },
   profileCardWide: { maxWidth: 980, padding: 0, flexDirection: 'row', overflow: 'hidden' },
   heroPanel: { flex: 1, minHeight: 590, padding: 42, justifyContent: 'space-between', overflow: 'hidden', backgroundColor: '#1A211D', borderRightWidth: 1, borderRightColor: palette.line },
