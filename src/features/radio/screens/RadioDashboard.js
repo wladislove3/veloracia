@@ -36,7 +36,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const radio = useRadioDashboard(profile, radius);
   const {
     location, locationError, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
-    currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
+    currentSpeaker, isInQueue, queuePosition, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
     playingId, playMessage, handlePressIn, handlePressOut, screenError, isFeedConnected,
   } = radio;
   const statusLabel = !isFeedConnected
@@ -142,6 +142,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           isFeedConnected={isFeedConnected}
           isInQueue={isInQueue}
           isWaiting={isWaiting}
+          queuePosition={queuePosition}
           isRecording={isRecording}
           isWide={isWide}
           onChangeProfile={onChangeProfile}

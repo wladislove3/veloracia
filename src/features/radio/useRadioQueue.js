@@ -41,7 +41,9 @@ export function useRadioQueue({ userId, profile, location }) {
   }, [now, users]);
 
   const currentSpeaker = queue[0] || null;
-  const isInQueue = queue.some((user) => user.userId === userId);
+  const queueIndex = queue.findIndex((user) => user.userId === userId);
+  const isInQueue = queueIndex !== -1;
+  const queuePosition = isInQueue ? queueIndex + 1 : null;
 
   const join = useCallback(async () => {
     if (!userId) return;
@@ -53,5 +55,5 @@ export function useRadioQueue({ userId, profile, location }) {
     await leaveRadioQueue(userId);
   }, [userId]);
 
-  return { queue, currentSpeaker, isInQueue, join, leave, error };
+  return { queue, currentSpeaker, isInQueue, queuePosition, join, leave, error };
 }

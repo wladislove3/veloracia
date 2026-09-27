@@ -9,7 +9,7 @@ import { useRadioQueue } from '../useRadioQueue';
 export function useRadioDashboard(profile, radius) {
   const { location, mapCenter, isLoading: isLocationLoading, error: locationError, requestLocation } = useLiveLocation();
   const { visibleMessages, activeUsers, connectionError } = useRadioFeed({ userId: profile.userId, location, radius });
-  const { queue, currentSpeaker, isInQueue, join, leave, error: queueError } = useRadioQueue({ userId: profile.userId, profile, location });
+  const { queue, currentSpeaker, isInQueue, queuePosition, join, leave, error: queueError } = useRadioQueue({ userId: profile.userId, profile, location });
   const { isRecording, isBlocked, remainingTime, recordingElapsed, error: recordingError, startRecording, stopRecording } = usePushToTalk({
     userId: profile.userId,
     profile,
@@ -22,7 +22,7 @@ export function useRadioDashboard(profile, radius) {
   const isStartingRecordingRef = useRef(false);
   const hasStartedRecordingRef = useRef(false);
   const { playingId, play, stop } = useAudioPlayback();
-  const isWaiting = isHoldingTalk && isInQueue && currentSpeaker?.userId !== profile.userId;
+  const isWaiting = isHoldingTalk && queuePosition > 1;
 
   const finishTalkSession = useCallback(async () => {
     isHoldingTalkRef.current = false;
@@ -105,7 +105,7 @@ export function useRadioDashboard(profile, radius) {
 
   return {
     location, locationError, mapCenter, isLocationLoading, requestLocation, mapRegion, nearbyQueue,
-    visibleMessages, activeUsers, currentSpeaker, isInQueue, isWaiting,
+    visibleMessages, activeUsers, currentSpeaker, isInQueue, queuePosition, isWaiting,
     isRecording, isBlocked, remainingTime, recordingElapsed, playingId, playMessage,
     handlePressIn, handlePressOut, screenError, isFeedConnected: !connectionError,
   };
