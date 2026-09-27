@@ -51,7 +51,7 @@ export function usePushToTalk({ userId, profile, location }) {
     }
     await publishVoiceMessage({ userId, profile, location, audioBytes, mimeType });
     await refreshRateLimit();
-  }, [location, profile, refreshRateLimit, userId]);
+  }, [location, profile, publishVoiceMessage, refreshRateLimit, userId]);
   const { isRecording, startCapture, stopCapture, releaseCapture } = useAudioCapture(publish);
 
   useEffect(() => {

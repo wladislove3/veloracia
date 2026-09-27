@@ -6,7 +6,7 @@
 
 ## Возможности
 
-- Локальная карта и радиус эфира до 20 км.
+- Карта с перемещением и зумом, радиус эфира до 20 км.
 - Общая очередь с одним текущим говорящим.
 - Короткие голосовые записи с лимитом 10 сообщений в час.
 - Гостевой профиль без телефона и электронной почты.
@@ -24,13 +24,15 @@ npm run web
 
 ## Настройка Firebase
 
-Перед запуском создайте файл `.env.local` по образцу `.env.example`, включите **Anonymous** в Firebase Authentication и примените правила базы и хранилища:
+Для стандартного проекта `.env.local` не нужен. Включите **Anonymous** в Firebase Authentication и примените правила базы и хранилища:
 
 ```bash
 firebase deploy --project default --only firestore:rules,firestore:indexes,storage
 ```
 
 В репозитории заданы публичные настройки Firebase проекта `veloracia-e93c7`; значения из окружения намеренно игнорируются, пока `EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG` не установлен в `true`. Для переопределения укажите полный актуальный набор `EXPO_PUBLIC_FIREBASE_*`. Инструкции находятся в [`docs/firebase-setup.md`](docs/firebase-setup.md). Клиентские операции требуют авторизованного гостя.
+
+Для другого Firebase-проекта скопируйте `.env.example` в `.env.local`, заполните все шесть Firebase-переменных и установите `EXPO_PUBLIC_FIREBASE_USE_ENV_CONFIG=true`. Веб-карта использует CARTO/OpenStreetMap. Google Maps API key требуется только Android-приложению.
 
 ## Структура
 
