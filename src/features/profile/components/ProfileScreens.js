@@ -1,7 +1,12 @@
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Linking, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { palette, radii, shadows, spacing } from '../../../shared/ui/tokens';
 import { PROFILE_AVATARS } from '../domain/profile';
+
+const legalDocuments = {
+  privacy: 'https://github.com/wladislove3/veloracia/blob/main/PRIVACY_POLICY.md',
+  terms: 'https://github.com/wladislove3/veloracia/blob/main/TERMS_OF_SERVICE.md',
+};
 
 export function ProfileSetup({ onSave }) {
   const { width, height } = useWindowDimensions();
@@ -99,6 +104,15 @@ export function ProfileSetup({ onSave }) {
                 {isSaving ? <ActivityIndicator color={palette.ink} /> : <Text style={styles.primaryButtonText}>Войти в эфир <Text>↗</Text></Text>}
               </Pressable>
               <Text style={styles.privacyNote}>Без телефона и регистрации. Только ваш голос и район.</Text>
+              <View style={styles.legalLinks}>
+                <Pressable accessibilityRole="link" accessibilityLabel="Политика конфиденциальности" onPress={() => Linking.openURL(legalDocuments.privacy).catch(() => undefined)}>
+                  <Text style={styles.legalLink}>Политика конфиденциальности</Text>
+                </Pressable>
+                <Text style={styles.legalSeparator}>·</Text>
+                <Pressable accessibilityRole="link" accessibilityLabel="Условия использования" onPress={() => Linking.openURL(legalDocuments.terms).catch(() => undefined)}>
+                  <Text style={styles.legalLink}>Условия использования</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -172,6 +186,9 @@ const styles = StyleSheet.create({
   primaryButton: { minHeight: 52, borderRadius: radii.sm, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.lime, marginTop: 4 },
   primaryButtonText: { color: palette.ink, fontSize: 14, fontWeight: '900', letterSpacing: 0.1 },
   privacyNote: { color: palette.textFaint, fontSize: 10, textAlign: 'center', marginTop: 15 },
+  legalLinks: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  legalLink: { color: palette.textMuted, fontSize: 10, textDecorationLine: 'underline' },
+  legalSeparator: { color: palette.textFaint, fontSize: 10 },
   errorText: { color: palette.warning, fontSize: 12, marginBottom: 8 },
   brandMarkText: { color: palette.ink, fontSize: 24, fontWeight: '900', fontStyle: 'italic' },
   pressed: { opacity: 0.82 },
