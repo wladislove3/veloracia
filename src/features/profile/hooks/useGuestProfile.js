@@ -2,6 +2,23 @@ import { useCallback, useEffect, useState } from 'react';
 import { ensureGuestUser } from '../../../shared/infrastructure/firebase/firebaseClient';
 import { getSavedProfile, removeSavedProfile, saveProfile as persistProfile } from '../data/profileRepository';
 
+function getSessionErrorMessage(error) {
+  switch (error?.code) {
+    case 'veloracia/firebase-config-missing':
+      return 'Не настроено подключение Firebase. Проверьте параметры проекта и перезапустите приложение.';
+    case 'auth/operation-not-allowed':
+      return 'В Firebase не включён анонимный вход. Включите Anonymous в Authentication → Sign-in method.';
+    case 'auth/unauthorized-domain':
+      return 'Добавьте veloracia.vercel.app в Firebase Authentication → Settings → Authorized domains.';
+    case 'auth/invalid-api-key':
+      return 'Ключ Firebase не подходит к приложению. Проверьте настройки Web App в Firebase.';
+    case 'auth/network-request-failed':
+      return 'Нет связи с Firebase. Проверьте интернет и попробуйте снова.';
+    default:
+      return 'Не удалось подключить гостевой профиль. Проверьте Firebase Anonymous sign-in и попробуйте ещё раз.';
+  }
+}
+
 export function useGuestProfile() {
   const [userId, setUserId] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -19,9 +36,7 @@ export function useGuestProfile() {
       setUserId(nextId);
       setProfile(restoredProfile);
     } catch (nextError) {
-      setError(nextError?.code === 'veloracia/firebase-config-missing'
-        ? 'Не настроено подключение Firebase. Проверьте параметры проекта и перезапустите приложение.'
-        : 'Не удалось подключить гостевой профиль. Проверьте Firebase Anonymous sign-in и попробуйте ещё раз.');
+      setError(getSessionErrorMessage(nextError));
     } finally {
       setIsLoading(false);
     }
