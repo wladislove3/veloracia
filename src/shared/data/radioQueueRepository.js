@@ -1,11 +1,15 @@
-import { collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, orderBy, query, serverTimestamp, setDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '../../../services/firebaseConfig';
 
 const getQueueCollection = () => collection(db, 'radioQueue');
 
-export function subscribeToQueue(onUsers, onError) {
+export function subscribeToQueue(joinedAfter, onUsers, onError) {
   return onSnapshot(
-    query(getQueueCollection(), orderBy('joinedAt', 'asc')),
+    query(
+      getQueueCollection(),
+      where('joinedAt', '>=', Timestamp.fromMillis(joinedAfter)),
+      orderBy('joinedAt', 'asc')
+    ),
     (snapshot) => onUsers(snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }))),
     onError
   );

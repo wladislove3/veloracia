@@ -10,14 +10,25 @@ export function useRadioQueue({ userId, profile, location }) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    const unsubscribe = subscribeToQueue(
-      (nextUsers) => {
-        setUsers(nextUsers);
-        setError(null);
-      },
-      (nextError) => setError(nextError)
-    );
-    return unsubscribe;
+    let unsubscribe = () => {};
+    const refreshSubscription = () => {
+      unsubscribe();
+      unsubscribe = subscribeToQueue(
+        Date.now() - QUEUE_LIFETIME,
+        (nextUsers) => {
+          setUsers(nextUsers);
+          setError(null);
+        },
+        (nextError) => setError(nextError)
+      );
+    };
+
+    refreshSubscription();
+    const interval = setInterval(refreshSubscription, QUEUE_LIFETIME);
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
