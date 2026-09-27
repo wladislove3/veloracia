@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveLocation } from '../../location/useLiveLocation';
 import { distanceInMeters } from '../../../shared/domain/geo';
-import { useAudioPlayback } from '../useAudioPlayback';
+import { useAudioPlayback } from '../audio/useAudioPlayback';
 import { usePushToTalk } from '../usePushToTalk';
 import { useRadioFeed } from '../useRadioFeed';
 import { useRadioQueue } from '../useRadioQueue';
