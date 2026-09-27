@@ -12,6 +12,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/features/radio/domain` owns radio limits and radius choices; `presentation` owns user-facing distance and time formatting.
 - `src/features/radio/domain/radioFeed.js` and `radioQueue.js` select retained, nearby feed items and derive queue state as pure rules. React hooks coordinate subscriptions and actions; they do not own feed-selection policy.
 - `src/features/radio/hooks` groups dashboard composition, feed and queue subscriptions, recording limits, and the push-to-talk session lifecycle.
+- `src/features/radio/components` separates the dashboard shell from reusable status, voice-message, and push-to-talk UI components.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
 - `src/shared/infrastructure/firebase` initializes Firebase and exposes platform-specific Auth plus Firestore and Storage clients. Profile-owned repositories implement guest-session behavior, keeping that use case out of the shared SDK setup.
 - `src/features/location/components/MapView.js` and `MapView.web.js` isolate native and web maps within the location feature.

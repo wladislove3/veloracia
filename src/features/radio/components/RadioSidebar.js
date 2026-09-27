@@ -1,80 +1,10 @@
 import React from 'react';
-import { FlatList, Platform, Pressable, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { styles } from '../radioDashboard.styles';
-import { formatDistanceInMeters, formatRecordingDuration, formatRelativeMessageAge } from '../presentation/formatters';
-import { MAX_RECORDING_DURATION_MS } from '../domain/radioPolicy';
-
-function StatusPill({ children, tone = 'neutral' }) {
-  return (
-    <View style={[styles.statusPill, tone === 'live' && styles.statusPillLive, tone === 'warning' && styles.statusPillWarning]}>
-      {tone === 'live' ? <View style={styles.statusDot} /> : null}
-      <Text style={[styles.statusPillText, tone === 'live' && styles.statusPillTextLive]}>{children}</Text>
-    </View>
-  );
-}
-
-function VoiceMessage({ message, isPlaying, onPlay }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${isPlaying ? 'Остановить' : 'Слушать'} сообщение от ${message.nickname || 'велосипедиста'}`}
-      onPress={() => onPlay(message, isPlaying)}
-      style={({ pressed }) => [styles.messageCard, isPlaying && styles.messageCardPlaying, pressed && styles.pressed]}
-    >
-      <View style={styles.messageAvatar}><Text>{message.avatar || '🎙️'}</Text></View>
-      <View style={styles.messageCopy}>
-        <Text numberOfLines={1} style={styles.messageName}>{message.nickname || 'Аноним'}</Text>
-        <Text style={styles.messageMeta}>{formatRelativeMessageAge(message.createdAt)} · голосовое</Text>
-      </View>
-      <View style={[styles.playButton, isPlaying && styles.playButtonActive]}>
-        <Text style={styles.playButtonText}>{isPlaying ? 'Ⅱ' : '▶'}</Text>
-      </View>
-    </Pressable>
-  );
-}
-
-function PushToTalkControl({ isRecording, isWaiting, queuePosition, isBlocked, isLocationReady, remainingTime, recordingElapsed, onPressIn, onPressOut, compact }) {
-  const isDisabled = !isRecording && (isBlocked || !isLocationReady);
-  const lockLabel = isBlocked
-    ? `Лимит · ${Math.ceil(remainingTime / 60_000)} мин`
-    : !isLocationReady ? 'Включите геопозицию для местного эфира'
-      : isWaiting ? `В очереди · №${queuePosition}. Удерживайте` : 'Удерживайте, чтобы говорить · до 30 сек';
-  const talkTitle = isRecording
-    ? `В эфире · ${formatRecordingDuration(recordingElapsed)}`
-    : isBlocked ? 'Небольшая пауза'
-      : !isLocationReady ? 'Нужна геопозиция'
-        : isWaiting ? `Вы в очереди · №${queuePosition}` : 'Сказать рядом';
-  const talkHint = isRecording
-    ? 'Отпустите, чтобы отправить · до 30 секунд'
-    : isWaiting ? 'Запись начнётся, когда эфир освободится' : lockLabel;
-  return (
-    <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={isRecording ? `Запись ${formatRecordingDuration(recordingElapsed)}. Отпустите, чтобы отправить голосовое сообщение` : lockLabel}
-        accessibilityState={{ disabled: isDisabled }}
-        disabled={isDisabled}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        onContextMenu={Platform.OS === 'web' ? (event) => event.preventDefault() : undefined}
-        style={({ pressed }) => [styles.talkButton, compact && styles.talkButtonCompact, isRecording && styles.talkButtonRecording, pressed && styles.talkButtonPressed, isDisabled && styles.talkButtonBlocked]}
-      >
-        <Text style={styles.talkButtonIcon}>{isRecording ? '◉' : '⌁'}</Text>
-      </Pressable>
-      <Text style={styles.talkTitle}>{talkTitle}</Text>
-      <Text style={styles.talkHint}>{talkHint}</Text>
-      {isRecording ? (
-        <View accessibilityElementsHidden style={styles.recordingProgressTrack}>
-          <View style={[styles.recordingProgressFill, { width: `${Math.min(100, (recordingElapsed / MAX_RECORDING_DURATION_MS) * 100)}%` }]} />
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-export function RadioStatusPill({ children, tone }) {
-  return <StatusPill tone={tone}>{children}</StatusPill>;
-}
+import { formatDistanceInMeters } from '../presentation/formatters';
+import RadioStatusPill from './RadioStatusPill';
+import VoiceMessageCard from './VoiceMessageCard';
+import PushToTalkControl from './PushToTalkControl';
 
 export default function RadioSidebar({
   isWide, profile, visibleMessages, currentSpeaker, isInQueue, isWaiting, queuePosition, isRecording, isBlocked, isLocationReady,
@@ -99,11 +29,11 @@ export default function RadioSidebar({
         <View style={[styles.onAirSignal, isInQueue && styles.onAirSignalWaiting]}><View style={styles.onAirSignalDot} /></View>
       </View> : null}
 
-      <View style={styles.feedHeading}><Text style={styles.feedTitle}>Недавние сообщения</Text><StatusPill>{formatDistanceInMeters(radius)}</StatusPill></View>
+      <View style={styles.feedHeading}><Text style={styles.feedTitle}>Недавние сообщения</Text><RadioStatusPill>{formatDistanceInMeters(radius)}</RadioStatusPill></View>
       <FlatList
         data={visibleMessages}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <VoiceMessage message={item} isPlaying={playingId === item.id} onPlay={onPlay} />}
+        renderItem={({ item }) => <VoiceMessageCard message={item} isPlaying={playingId === item.id} onPlay={onPlay} />}
         ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyIcon}>⌁</Text><Text style={styles.emptyTitle}>Пока тихо</Text><Text style={styles.emptyCopy}>Первый голос рядом может быть вашим.</Text></View>}
         style={styles.feedScroll}
         contentContainerStyle={styles.feedList}
