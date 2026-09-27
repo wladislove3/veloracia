@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
 import MapView, { Circle, Marker } from '../../../../components/MapView';
 import { styles } from '../radioDashboard.styles';
 import RadioSidebar, { RadioStatusPill } from '../components/RadioSidebar';
@@ -26,15 +26,17 @@ function nearbyCountLabel(users, queue, userId) {
   return `${count} ${noun}`;
 }
 
-function IconButton({ label, onPress, accessibilityLabel, style }) {
+function IconButton({ label, onPress, accessibilityLabel, style, disabled = false, busy = false }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled, busy }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.iconButton, style, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.iconButton, style, pressed && styles.pressed, disabled && styles.disabled]}
     >
-      <Text style={styles.iconButtonText}>{label}</Text>
+      {busy ? <ActivityIndicator color="#CEFF57" /> : <Text style={styles.iconButtonText}>{label}</Text>}
     </Pressable>
   );
 }
@@ -46,7 +48,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
   const [radius, setRadius] = useState(10_000);
   const radio = useRadioDashboard(profile, radius);
   const {
-    location, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
+    location, isLocationLoading, requestLocation, mapRegion, nearbyQueue, activeUsers, visibleMessages,
     currentSpeaker, isInQueue, isWaiting, isRecording, isBlocked, remainingTime,
     playingId, playMessage, handlePressIn, handlePressOut, screenError, isConnected,
   } = radio;
@@ -84,18 +86,31 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
           <View style={styles.mapTopOverlay} pointerEvents="box-none">
             <View style={styles.mapTitleCard}>
               <Text style={styles.mapTitleEyebrow}>ВАШ РАЙОН</Text>
-              <Text style={styles.mapTitle}>{location ? 'Эфир поблизости' : 'Найдите свой эфир'}</Text>
+              <Text style={styles.mapTitle}>{location ? 'Эфир поблизости' : isLocationLoading ? 'Находим ваш район…' : 'Найдите свой эфир'}</Text>
             </View>
-            <IconButton label="◎" accessibilityLabel="Обновить геопозицию" onPress={requestLocation} style={styles.locateButton} />
+            <IconButton
+              label="◎"
+              accessibilityLabel={isLocationLoading ? 'Определяем геопозицию' : 'Обновить геопозицию'}
+              onPress={requestLocation}
+              style={styles.locateButton}
+              disabled={isLocationLoading}
+              busy={isLocationLoading}
+            />
           </View>
 
           <View style={styles.mapBottomOverlay} pointerEvents="box-none">
             {!location ? (
-              <Pressable onPress={requestLocation} style={styles.locationPrompt}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isLocationLoading, busy: isLocationLoading }}
+                disabled={isLocationLoading}
+                onPress={requestLocation}
+                style={({ pressed }) => [styles.locationPrompt, pressed && styles.pressed, isLocationLoading && styles.disabled]}
+              >
                 <View style={styles.locationPromptIcon}><Text>⌖</Text></View>
                 <View style={styles.locationPromptCopy}>
-                  <Text style={styles.locationPromptTitle}>Включите геопозицию</Text>
-                  <Text style={styles.locationPromptText}>Чтобы услышать людей поблизости</Text>
+                  <Text style={styles.locationPromptTitle}>{isLocationLoading ? 'Ищем вас на карте' : 'Включите геопозицию'}</Text>
+                  <Text style={styles.locationPromptText}>{isLocationLoading ? 'Это займёт пару секунд' : 'Чтобы услышать людей поблизости'}</Text>
                 </View>
                 <Text style={styles.locationPromptArrow}>↗</Text>
               </Pressable>

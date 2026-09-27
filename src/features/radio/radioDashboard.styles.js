@@ -103,5 +103,6 @@ export const styles = StyleSheet.create({
   profileMenuButtonText: { color: palette.textMuted, fontSize: 21, lineHeight: 24, fontWeight: '900' },
   inlineError: { color: palette.warning, fontSize: 10, lineHeight: 14, paddingBottom: 8 },
   pressed: { opacity: 0.82 },
+  disabled: { opacity: 0.66 },
 
 });

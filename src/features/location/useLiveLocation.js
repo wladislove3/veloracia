@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentLocation, watchLocation } from './platform/location';
 
 const INITIAL_CENTER = { latitude: 55.751244, longitude: 37.618423 };
 
 export function useLiveLocation() {
   const [location, setLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const requestingRef = useRef(false);
 
   const requestLocation = useCallback(async () => {
+    if (requestingRef.current) return;
+    requestingRef.current = true;
     setIsLoading(true);
     setError(null);
     try {
@@ -18,6 +21,7 @@ export function useLiveLocation() {
         ? 'Разрешите доступ к геопозиции в настройках браузера.'
         : nextError.message || 'Не удалось определить геопозицию.');
     } finally {
+      requestingRef.current = false;
       setIsLoading(false);
     }
   }, []);
