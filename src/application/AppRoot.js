@@ -8,7 +8,7 @@ export default function AppRoot() {
   const sessionProfile = useMemo(() => profile && userId ? { ...profile, userId } : null, [profile, userId]);
 
   if (isLoading) return <LoadingScreen />;
-  if (error) return <SetupRequired message={error} onRetry={restoreSession} />;
+  if (error) return <SetupRequired error={error} onRetry={restoreSession} />;
   if (!sessionProfile) return <ProfileSetup onSave={saveProfile} />;
   return <RadioDashboard profile={sessionProfile} onChangeProfile={clearProfile} />;
 }
