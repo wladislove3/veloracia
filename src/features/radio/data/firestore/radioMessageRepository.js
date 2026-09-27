@@ -11,8 +11,7 @@ import {
   Timestamp,
   where,
 } from 'firebase/firestore';
-import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { db, storage } from '../../../../shared/infrastructure/firebase/firebaseClient';
+import { db } from '../../../../shared/infrastructure/firebase/firebaseClient';
 import { MAX_MESSAGES_PER_HOUR, RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
 
 const getMessagesCollection = () => collection(db, 'radioMessages');
@@ -41,25 +40,13 @@ export async function getRecentMessageTimestamps(userId, since) {
     .filter(Number.isFinite);
 }
 
-export async function publishVoiceMessage({ userId, profile, location, audioBytes, mimeType }) {
-  const messageRef = doc(getMessagesCollection());
-  const audioRef = ref(storage, `radioMessages/${userId}/${messageRef.id}`);
+export function createRadioMessageId() {
+  return doc(getMessagesCollection()).id;
+}
 
-  try {
-    await uploadBytes(audioRef, audioBytes, { contentType: mimeType });
-    const audioUrl = await getDownloadURL(audioRef);
-    await setDoc(messageRef, {
-      userId,
-      nickname: profile?.nickname || '',
-      avatar: profile?.avatar || '',
-      audioUrl,
-      audioPath: audioRef.fullPath,
-      mimeType,
-      location: location ? { latitude: location.latitude, longitude: location.longitude } : null,
-      createdAt: serverTimestamp(),
-    });
-  } catch (error) {
-    await deleteObject(audioRef).catch(() => undefined);
-    throw error;
-  }
+export function saveRadioMessage(messageId, message) {
+  return setDoc(doc(getMessagesCollection(), messageId), {
+    ...message,
+    createdAt: serverTimestamp(),
+  });
 }

@@ -25,6 +25,6 @@ The rules deliberately remove unauthenticated public writes. Existing clients th
 
 ## Audio and retention
 
-New recordings are uploaded to `radioMessages/{uid}/{messageId}` in Firebase Storage. Firestore keeps only their metadata and the Storage path. The client reads at most 100 recent messages and filters visible messages by location and age. The rate-limit lookup uses the `radioMessages(userId, createdAt)` composite index in `firestore.indexes.json` and reads at most 10 records per check. Deploy the index with the rules. The app does not delete shared records as part of normal startup.
+New recordings are uploaded to `radioMessages/{uid}/{messageId}` in Firebase Storage; Firestore stores message metadata and the audio path. The client reads at most 100 recent messages and filters visible messages by location and age. The rate-limit lookup uses the `radioMessages(userId, createdAt)` composite index in `firestore.indexes.json` and reads at most 10 records per check. Deploy the index with the rules. The app does not delete shared records as part of normal startup.
 
 Legacy messages that stored base64 audio directly in Firestore remain playable while they are still returned by the feed. Do not run bulk deletion scripts against production data.

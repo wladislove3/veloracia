@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getRecentMessageTimestamps, publishVoiceMessage } from '../data/firestore/radioMessageRepository';
+import { getRecentMessageTimestamps } from '../data/firestore/radioMessageRepository';
+import { publishVoiceMessage } from '../application/publishVoiceMessage';
 import { useAudioCapture } from '../audio/useAudioCapture';
 import {
   MAX_MESSAGES_PER_HOUR,
