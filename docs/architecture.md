@@ -11,7 +11,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/features/radio/domain` owns radio limits and radius choices; `presentation` owns user-facing distance and time formatting.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
 - `src/shared/infrastructure/firebase` owns Firebase initialization, platform-specific auth, Firestore, and Storage clients.
-- `components/MapView.js` and `components/MapView.web.js` isolate platform-specific maps.
+- `src/features/location/components/MapView.js` and `MapView.web.js` isolate native and web maps within the location feature.
 
 ## Data flow
 

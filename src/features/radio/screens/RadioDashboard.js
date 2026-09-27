@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
-import MapView, { Circle, Marker } from '../../../../components/MapView';
+import MapView, { Circle, Marker } from '../../location/components/MapView';
 import { styles } from '../radioDashboard.styles';
 import RadioSidebar, { RadioStatusPill } from '../components/RadioSidebar';
 import LocationMapPlaceholder from '../components/LocationMapPlaceholder';
