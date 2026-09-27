@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
 import MapView, { Circle, Marker } from '../../location/components/MapView';
 import { styles } from '../radioDashboard.styles';
@@ -39,6 +39,11 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
     currentSpeaker, isInQueue, queuePosition, isWaiting, isRecording, isBlocked, remainingTime, recordingElapsed,
     playingId, playMessage, handlePressIn, handlePressOut, screenError, isFeedConnected,
   } = radio;
+  const queuedUserIds = useMemo(() => new Set(nearbyQueue.map((user) => user.userId)), [nearbyQueue]);
+  const activeUsersNotQueued = useMemo(
+    () => activeUsers.filter((user) => user.userId !== profile.userId && !queuedUserIds.has(user.userId)),
+    [activeUsers, profile.userId, queuedUserIds],
+  );
   const statusLabel = !isFeedConnected
     ? 'Нет связи с эфиром'
     : locationError
@@ -73,7 +78,7 @@ export default function RadioDashboard({ profile, onChangeProfile }) {
               {nearbyQueue.map((user) => (
                 <Marker key={`queue-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'В эфире'} description={user.nickname || 'Слушает радио рядом'} />
               ))}
-              {activeUsers.filter((user) => user.userId !== profile.userId && !nearbyQueue.some((queued) => queued.userId === user.userId)).map((user) => (
+              {activeUsersNotQueued.map((user) => (
                 <Marker key={`active-${user.userId}`} coordinate={user.location} title={user.avatar || user.nickname || 'Рядом'} description={user.nickname || 'Недавно был в эфире'} />
               ))}
             </MapView>
