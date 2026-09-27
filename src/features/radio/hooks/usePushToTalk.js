@@ -35,11 +35,12 @@ export function usePushToTalk({ userId, profile, location }) {
     }
   }, [userId]);
 
-  const publish = useCallback(async (audioBase64, mimeType) => {
-    if (audioBase64.length * 0.75 > MAX_RECORDING_AUDIO_BYTES) {
+  const publish = useCallback(async (audioBytes, mimeType) => {
+    const sizeInBytes = audioBytes.byteLength ?? audioBytes.size;
+    if (!Number.isFinite(sizeInBytes) || sizeInBytes > MAX_RECORDING_AUDIO_BYTES) {
       throw new Error('Сообщение слишком длинное. Запишите голос короче.');
     }
-    await publishVoiceMessage({ userId, profile, location, audioBase64, mimeType });
+    await publishVoiceMessage({ userId, profile, location, audioBytes, mimeType });
     await refreshRateLimit();
   }, [location, profile, refreshRateLimit, userId]);
   const { isRecording, startCapture, stopCapture, releaseCapture } = useAudioCapture(publish);

@@ -11,7 +11,7 @@ import {
   Timestamp,
   where,
 } from 'firebase/firestore';
-import { deleteObject, getDownloadURL, ref, uploadString } from 'firebase/storage';
+import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../../../../shared/infrastructure/firebase/firebaseClient';
 import { RADIO_RECENT_MESSAGES_LIMIT } from '../../domain/radioPolicy';
 
@@ -45,12 +45,12 @@ export async function countMessagesSince(userId, since) {
   }
 }
 
-export async function publishVoiceMessage({ userId, profile, location, audioBase64, mimeType }) {
+export async function publishVoiceMessage({ userId, profile, location, audioBytes, mimeType }) {
   const messageRef = doc(getMessagesCollection());
   const audioRef = ref(storage, `radioMessages/${userId}/${messageRef.id}`);
 
   try {
-    await uploadString(audioRef, audioBase64, 'base64', { contentType: mimeType });
+    await uploadBytes(audioRef, audioBytes, { contentType: mimeType });
     const audioUrl = await getDownloadURL(audioRef);
     await setDoc(messageRef, {
       userId,

@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(String(reader.result).split(',')[1] || '');
-    reader.onerror = () => reject(reader.error || new Error('Не удалось прочитать запись.'));
-    reader.readAsDataURL(blob);
-  });
-}
-
 export function useAudioCapture(onCaptured) {
   const [isRecording, setIsRecording] = useState(false);
   const recorderRef = useRef(null);
@@ -51,8 +42,7 @@ export function useAudioCapture(onCaptured) {
         })), { once: true });
         recorder.stop();
       });
-      const audioBase64 = await blobToBase64(blob);
-      if (audioBase64) await onCapturedRef.current(audioBase64, blob.type || 'audio/webm');
+      if (blob.size) await onCapturedRef.current(blob, blob.type || 'audio/webm');
     } finally {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       recorderRef.current = null;

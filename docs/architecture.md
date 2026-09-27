@@ -18,7 +18,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 ## Data flow
 
 1. Firebase Anonymous Auth supplies a stable UID; the nickname and avatar stay on device.
-2. A recording is written to Storage first. Firestore receives a small metadata document only after upload succeeds.
+2. Platform recorders pass browser `Blob`s or native byte arrays directly to Storage, avoiding a base64 copy. Firestore receives a small metadata document only after the upload succeeds.
 3. The app subscribes to a bounded Firestore feed and a 30-minute queue window. The queue listener refreshes at the window boundary so abandoned entries stop accumulating in long-running sessions. Realtime listeners are released when their feature unmounts.
 4. Location permission is requested only after the user asks to center the map. Coordinates are attached to radio messages and queue presence.
 

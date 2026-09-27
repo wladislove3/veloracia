@@ -1,5 +1,5 @@
 import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
-import * as FileSystem from 'expo-file-system/legacy';
+import { File } from 'expo-file-system';
 import { useCallback, useEffect, useRef } from 'react';
 
 const recorderOptions = {
@@ -26,13 +26,16 @@ export function useAudioCapture(onCaptured) {
     await recorder.stop();
     const uri = recorder.uri;
     if (!uri) throw new Error('Запись не сохранилась. Попробуйте ещё раз.');
+    const audioFile = new File(uri);
     try {
-      const audioBase64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      await onCapturedRef.current(audioBase64, 'audio/m4a');
+      const audioBytes = await audioFile.bytes();
+      await onCapturedRef.current(audioBytes, 'audio/m4a');
     } finally {
-      await FileSystem.deleteAsync(uri, { idempotent: true }).catch(() => undefined);
+      try {
+        audioFile.delete();
+      } catch {
+        // Temporary file cleanup is best-effort after publishing completes.
+      }
     }
   }, [recorder]);
 
