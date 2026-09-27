@@ -7,6 +7,7 @@ The app keeps its UI and backend access separate while sharing one product flow 
 - `src/application/AppRoot.js` selects the app's loading, profile setup, and radio dashboard states.
 - `src/features` owns each feature's UI and state. Feature-local `data` modules adapt private device storage; shared Firebase adapters live in `src/shared/data`.
 - `src/features/radio/audio` isolates recording and playback behind platform-specific Expo module resolution (`.web.js` and `.native.js`). The radio feature owns recording limits and publishing; audio adapters only acquire, play, and release media resources.
+- `src/features/location/platform` adapts browser geolocation and Expo Location to one location feature interface.
 - `src/shared/domain` holds small pure rules such as distance and timestamp conversion.
 - `src/shared/data` adapts Firebase collections and Storage operations to feature use cases.
 - `services/firebaseConfig.js` owns Firebase initialization and guest authentication.
