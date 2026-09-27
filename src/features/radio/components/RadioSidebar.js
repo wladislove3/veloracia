@@ -46,7 +46,7 @@ function VoiceMessage({ message, isPlaying, onPlay }) {
 function PushToTalkControl({ isRecording, isWaiting, isBlocked, remainingTime, onPressIn, onPressOut, compact }) {
   const lockLabel = isBlocked
     ? `Лимит · ${Math.ceil(remainingTime / 60_000)} мин`
-    : isWaiting ? 'Вы в очереди · удерживайте' : 'Удерживайте, чтобы говорить';
+    : isWaiting ? 'Вы в очереди · удерживайте' : 'Удерживайте, чтобы говорить · до 30 сек';
   return (
     <View style={[styles.talkArea, compact && styles.talkAreaCompact]}>
       <Pressable

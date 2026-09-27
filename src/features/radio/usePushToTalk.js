@@ -64,14 +64,17 @@ export function usePushToTalk({ userId, profile, location }) {
     }
   }, [releaseCapture, stopCapture]);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async (onAutoStop) => {
     if (startingRef.current || stoppingRef.current || isBlocked || !userId) return false;
     startingRef.current = true;
     setError(null);
     try {
       await startCapture();
       startTimeRef.current = Date.now();
-      stopTimerRef.current = setTimeout(stopRecording, MAX_RECORDING_MILLISECONDS);
+      stopTimerRef.current = setTimeout(async () => {
+        await stopRecording();
+        await onAutoStop?.();
+      }, MAX_RECORDING_MILLISECONDS);
       return true;
     } catch (nextError) {
       releaseCapture();

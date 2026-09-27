@@ -20,15 +20,29 @@ export function useRadioDashboard(profile, radius) {
   const isHoldingTalkRef = useRef(false);
   const queueJoinPromiseRef = useRef(null);
   const isStartingRecordingRef = useRef(false);
+  const hasStartedRecordingRef = useRef(false);
   const { playingId, play, stop } = useAudioPlayback();
   const isWaiting = isHoldingTalk && isInQueue && currentSpeaker?.userId !== profile.userId;
 
+  const finishTalkSession = useCallback(async () => {
+    isHoldingTalkRef.current = false;
+    hasStartedRecordingRef.current = false;
+    setIsHoldingTalk(false);
+    await leave().catch(() => setNotice('Не удалось освободить эфир.'));
+  }, [leave]);
+
   useEffect(() => {
-    if (!isHoldingTalk || currentSpeaker?.userId !== profile.userId || isRecording || isStartingRecordingRef.current) return;
+    if (!isHoldingTalk) {
+      hasStartedRecordingRef.current = false;
+      return;
+    }
+    if (currentSpeaker?.userId !== profile.userId || isRecording || isStartingRecordingRef.current || hasStartedRecordingRef.current) return;
     isStartingRecordingRef.current = true;
-    startRecording().then(async (started) => {
+    hasStartedRecordingRef.current = true;
+    startRecording(finishTalkSession).then(async (started) => {
       if (!started) {
         isHoldingTalkRef.current = false;
+        hasStartedRecordingRef.current = false;
         setIsHoldingTalk(false);
         await leave().catch(() => undefined);
       } else if (!isHoldingTalkRef.current) {
@@ -38,7 +52,7 @@ export function useRadioDashboard(profile, radius) {
     }).finally(() => {
       isStartingRecordingRef.current = false;
     });
-  }, [currentSpeaker?.userId, isHoldingTalk, isRecording, leave, profile.userId, startRecording, stopRecording]);
+  }, [currentSpeaker?.userId, finishTalkSession, isHoldingTalk, isRecording, leave, profile.userId, startRecording, stopRecording]);
 
   const mapRegion = useMemo(() => ({
     latitude: mapCenter.latitude,
@@ -69,6 +83,7 @@ export function useRadioDashboard(profile, radius) {
 
   const handlePressOut = useCallback(async () => {
     isHoldingTalkRef.current = false;
+    hasStartedRecordingRef.current = false;
     setIsHoldingTalk(false);
     if (isRecording) await stopRecording();
     await queueJoinPromiseRef.current?.catch(() => undefined);
