@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { distanceInMeters, timestampToMillis } from '../../shared/domain/geo';
 import { subscribeToRecentMessages } from '../../shared/data/radioMessageRepository';
+import { cacheRadioMessages, getCachedRadioMessages } from './data/radioFeedCache';
 
-const MESSAGE_CACHE_KEY = 'veloracia.messages.v2';
 const CACHE_MAX_AGE = 3 * 60 * 60 * 1000;
 
 export function useRadioFeed({ userId, location, radius }) {
@@ -13,32 +12,20 @@ export function useRadioFeed({ userId, location, radius }) {
 
   useEffect(() => {
     let active = true;
-    AsyncStorage.getItem(MESSAGE_CACHE_KEY)
-      .then((raw) => {
-        if (!active || !raw) return;
-        const cached = JSON.parse(raw);
-        if (Array.isArray(cached)) setMessages(cached);
+    let hasServerSnapshot = false;
+    getCachedRadioMessages()
+      .then((cached) => {
+        if (active && !hasServerSnapshot && cached.length) setMessages(cached);
       })
       .catch(() => undefined);
 
     const unsubscribe = subscribeToRecentMessages(
       (nextMessages) => {
         if (!active) return;
+        hasServerSnapshot = true;
         setMessages(nextMessages);
         setConnectionError(null);
-        const compactCache = nextMessages
-          .filter((message) => message.audioUrl)
-          .map((message) => ({
-            id: message.id,
-            userId: message.userId,
-            nickname: message.nickname,
-            avatar: message.avatar,
-            audioUrl: message.audioUrl,
-            mimeType: message.mimeType,
-            location: message.location,
-            createdAt: timestampToMillis(message.createdAt),
-          }));
-        AsyncStorage.setItem(MESSAGE_CACHE_KEY, JSON.stringify(compactCache)).catch(() => undefined);
+        cacheRadioMessages(nextMessages).catch(() => undefined);
       },
       (error) => {
         if (active) setConnectionError(error);

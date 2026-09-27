@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ensureGuestUser } from '../../../services/firebaseConfig';
-
-const PROFILE_KEY = 'veloracia.userProfile';
+import { getSavedProfile, removeSavedProfile, saveProfile as persistProfile } from './data/profileRepository';
 
 export function useGuestProfile() {
   const [userId, setUserId] = useState(null);
@@ -14,18 +12,10 @@ export function useGuestProfile() {
     setIsLoading(true);
     setError(null);
     try {
-      const [nextId, savedProfile] = await Promise.all([
+      const [nextId, restoredProfile] = await Promise.all([
         ensureGuestUser(),
-        AsyncStorage.getItem(PROFILE_KEY),
+        getSavedProfile(),
       ]);
-      let restoredProfile = null;
-      if (savedProfile) {
-        try {
-          restoredProfile = JSON.parse(savedProfile);
-        } catch {
-          await AsyncStorage.removeItem(PROFILE_KEY);
-        }
-      }
       setUserId(nextId);
       setProfile(restoredProfile);
     } catch (nextError) {
@@ -40,16 +30,12 @@ export function useGuestProfile() {
   useEffect(() => { restoreSession(); }, [restoreSession]);
 
   const saveProfile = useCallback(async (nextProfile) => {
-    const normalized = {
-      nickname: nextProfile.nickname.trim().slice(0, 20),
-      avatar: nextProfile.avatar || '🚴',
-    };
-    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(normalized));
+    const normalized = await persistProfile(nextProfile);
     setProfile(normalized);
   }, []);
 
   const clearProfile = useCallback(async () => {
-    await AsyncStorage.removeItem(PROFILE_KEY);
+    await removeSavedProfile();
     setProfile(null);
   }, []);
 

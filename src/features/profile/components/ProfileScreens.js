@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { palette, radii, shadows, spacing } from '../../../shared/ui/tokens';
-
-const AVATARS = ['🚴', '🧭', '🦊', '🐻', '🦉', '🐈', '🐺', '🦋'];
+import { PROFILE_AVATARS } from '../domain/profile';
 
 export function ProfileSetup({ onSave }) {
   const [nickname, setNickname] = useState('');
-  const [avatar, setAvatar] = useState(AVATARS[0]);
+  const [avatar, setAvatar] = useState(PROFILE_AVATARS[0]);
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -49,7 +48,7 @@ export function ProfileSetup({ onSave }) {
         />
         <Text style={styles.inputLabel}>ВАШ ЗНАК</Text>
         <View style={styles.avatarGrid}>
-          {AVATARS.map((item) => (
+          {PROFILE_AVATARS.map((item) => (
             <Pressable
               key={item}
               accessibilityRole="button"
