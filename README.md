@@ -36,14 +36,17 @@ firebase deploy --only firestore:rules,storage
 
 ```text
 src/
-  app/                 композиция приложения и адаптивный экран
-  features/            профиль, геопозиция и сценарии радио
+  application/         соединение пользовательских сценариев
+  features/
+    profile/           гостевой профиль и экраны входа
+    location/          разрешение и обновление геопозиции
+    radio/             очередь, лента, запись, воспроизведение и экран эфира
   shared/
     data/              адаптеры Firebase
     domain/            независимые правила предметной области
     ui/                дизайн-токены
 services/              инициализация Firebase и гостевой вход
-components/             карты для native и web
+components/            платформенные карты для native и web
 ```
 
 Направление зависимостей: экран → feature hooks/use cases → репозитории → Firebase. Доступ к Firestore и Storage не размещается в компонентах интерфейса.
@@ -52,6 +55,7 @@ components/             карты для native и web
 
 ```bash
 npm run web:build
+npm run android:bundle
 ```
 
 Vercel использует `vercel.json`: команда `npm run web:build`, каталог результата `dist`. Добавьте Firebase-переменные из `.env.example` в Vercel Project Settings для нужных deployment environments.

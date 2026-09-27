@@ -1,16 +1,7 @@
 import React, { useEffect } from 'react';
 import { MapContainer, Marker as LeafletMarker, Popup, TileLayer, Circle as LeafletCircle, useMap } from 'react-leaflet';
 import L from 'leaflet';
-
-const injectLeafletStyles = () => {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById('leaflet-css')) return;
-  const link = document.createElement('link');
-  link.id = 'leaflet-css';
-  link.rel = 'stylesheet';
-  link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-  document.head.appendChild(link);
-};
+import 'leaflet/dist/leaflet.css';
 
 const injectLeafletOverrides = () => {
   if (typeof document === 'undefined') return;
@@ -43,7 +34,6 @@ const RegionSynchronizer = ({ region }) => {
 
 const MapView = ({ region, style, children, onLoad, onError, ...rest }) => {
   useEffect(() => {
-    injectLeafletStyles();
     injectLeafletOverrides();
   }, []);
 

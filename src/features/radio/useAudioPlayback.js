@@ -1,4 +1,4 @@
-import { AudioModule } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
@@ -7,6 +7,7 @@ export function useAudioPlayback() {
   const [playingId, setPlayingId] = useState(null);
   const webAudioRef = useRef(null);
   const nativePlayerRef = useRef(null);
+  const nativeStatusSubscriptionRef = useRef(null);
   const temporaryFileRef = useRef(null);
   const active = useRef(true);
 
@@ -15,7 +16,9 @@ export function useAudioPlayback() {
     webAudioRef.current = null;
     const player = nativePlayerRef.current;
     nativePlayerRef.current = null;
-    if (player?.remove) await player.remove().catch(() => undefined);
+    nativeStatusSubscriptionRef.current?.remove();
+    nativeStatusSubscriptionRef.current = null;
+    player?.remove?.();
     if (temporaryFileRef.current) {
       await FileSystem.deleteAsync(temporaryFileRef.current, { idempotent: true }).catch(() => undefined);
       temporaryFileRef.current = null;
@@ -44,13 +47,14 @@ export function useAudioPlayback() {
       temporaryFileRef.current = source;
       await FileSystem.writeAsStringAsync(source, message.audioData, { encoding: FileSystem.EncodingType.Base64 });
     }
-    const player = await AudioModule.createPlayerAsync({ uri: source });
+    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
+    const player = createAudioPlayer(source);
     nativePlayerRef.current = player;
-    player.on?.('playbackStatusUpdate', async (status) => {
+    nativeStatusSubscriptionRef.current = player.addListener('playbackStatusUpdate', async (status) => {
       if (status?.didJustFinish) await stop();
     });
     setPlayingId(message.id);
-    await player.play();
+    player.play();
   }, [stop]);
 
   useEffect(() => {
@@ -58,7 +62,8 @@ export function useAudioPlayback() {
     return () => {
       active.current = false;
       webAudioRef.current?.pause();
-      nativePlayerRef.current?.remove?.().catch(() => undefined);
+      nativeStatusSubscriptionRef.current?.remove();
+      nativePlayerRef.current?.remove?.();
       if (temporaryFileRef.current) FileSystem.deleteAsync(temporaryFileRef.current, { idempotent: true }).catch(() => undefined);
     };
   }, []);
